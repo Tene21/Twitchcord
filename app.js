@@ -247,7 +247,6 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
 			});
 			botReq.write(data);
 			botReq.end();
-			//TODO: change storage of last stream to JSON to allow comparison
 			console.log("Outputting JSON");
 			console.log(lastStreamJSON);
 			console.log("Modifying JSON...");
