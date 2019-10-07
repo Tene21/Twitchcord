@@ -35,6 +35,7 @@ app.get('/', function(req,res) {
 
 //GET webhook route
 app.get('/api', (req,res) => {
+	//TODO: detect unsubscribe alert when the topic subscription runs out, use to automatically send a keep-alive to the Twitch API
 	console.log("GET request received at " + Date(Date.now()).toString());
 	console.log(req.query['hub.challenge']);
 	res.status(200).send(req.query['hub.challenge']);
