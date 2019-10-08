@@ -9,8 +9,6 @@ const bodyParser = require('body-parser');
 const app = express();
 const clientID = fs.readFileSync("clientid", "utf8");
 
-const htmlIndex = fs.readFileSync("index.html", "utf8");
-
 // Certificate
 const privateKey = fs.readFileSync('/etc/letsencrypt/live/tene.dev/privkey.pem', 'utf8');
 const certificate = fs.readFileSync('/etc/letsencrypt/live/tene.dev/cert.pem', 'utf8');
@@ -30,9 +28,7 @@ app.use(bodyParser.json());
 //GET homepage
 app.get('/', function(req,res) {
 	console.log("Oh hey, someone's checking out the homepage");
-	res.writeHead(200, {"Content-Type": "text/html"});
-	res.write(htmlIndex);
-	res.end();
+	res.sendFile('/home/pi/server/index.html');
 });
 
 //GET webhook route
