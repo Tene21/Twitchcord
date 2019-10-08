@@ -7,7 +7,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 
 const app = express();
-
+const clientID = fs.readFileSync("clientid", "utf8");
 
 // Certificate
 const privateKey = fs.readFileSync('/etc/letsencrypt/live/tene.dev/privkey.pem', 'utf8');
@@ -47,7 +47,6 @@ app.post('/api', (req,res) => {
 	req.accepts('application/json');
 	console.log(req.body);
 	var stringified = JSON.stringify(req.body);
-	var clientID = fs.readFileSync("clientid", "utf8");
 	//in case any characters need escaped
 	stringified = stringified.replace(/\\n/g, "\\n")  
                .replace(/\\'/g, "\\'")
