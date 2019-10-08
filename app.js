@@ -9,6 +9,8 @@ const bodyParser = require('body-parser');
 const app = express();
 const clientID = fs.readFileSync("clientid", "utf8");
 
+const htmlIndex = fs.readFileSync("index.html", "utf8");
+
 // Certificate
 const privateKey = fs.readFileSync('/etc/letsencrypt/live/tene.dev/privkey.pem', 'utf8');
 const certificate = fs.readFileSync('/etc/letsencrypt/live/tene.dev/cert.pem', 'utf8');
@@ -29,7 +31,7 @@ app.use(bodyParser.json());
 app.get('/', function(req,res) {
 	console.log("Oh hey, someone's checking out the homepage");
 	res.writeHead(200, {"Content-Type": "text/html"});
-	res.write("<html><head><title>Tene\'s basic website</title></head><body>Right now, this server just acts as an API request handler.<br>But watch this space! I'm sure I'll find another use for it eventually!</body></html>");
+	res.write(htmlIndex);
 	res.end();
 });
 
