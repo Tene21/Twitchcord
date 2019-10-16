@@ -238,13 +238,13 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
 				embeds:[{
 					color: usersJSON.users[i].accent_colour,
 					author:{
-						icon_url: "https://static-cdn.jtvnw.net/jtv_user_pictures/" + usersJSON.users[i].internal_id + "-profile_image-602e91b1edb132e8-300x300.png",
+						icon_url: "https://static-cdn.jtvnw.net/jtv_user_pictures/" + usersJSON.users[i].profile_image
 						name: userName,
 						url: "http://twitch.tv/" + usersJSON.users[i].user_name
 					},
 					description: "[" + streamTitle + "](http://twitch.tv/" + usersJSON.users[i].user_name +")",
 					thumbnail: {
-						url: "https://static-cdn.jtvnw.net/jtv_user_pictures/" + usersJSON.users[i].internal_id + "-profile_image-602e91b1edb132e8-300x300.png"
+						url: "https://static-cdn.jtvnw.net/jtv_user_pictures/" + usersJSON.users[i].profile_image
 					},
 					fields: [{
 						name: "Game",
