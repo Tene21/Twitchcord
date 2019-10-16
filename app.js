@@ -8,8 +8,10 @@ const xhub = require('express-x-hub');
 const bodyParser = require('body-parser');
 
 const app = express();
+const router = express.Router();
 const clientID = fs.readFileSync("clientid", "utf8");
 const clientSecret = fs.readFileSync("secret", "utf8");
+const htmlPath = __dirname + '/views/';
 
 // Certificate
 const privateKey = fs.readFileSync('/etc/letsencrypt/live/tene.dev/privkey.pem', 'utf8');
@@ -25,16 +27,22 @@ const credentials = {
 var lastStreamJSON;
 var currentIndex;
 
+app.use(express.static(__dirname + '/views'));
 app.use(xhub({ algorithm: 'sha256', secret: clientSecret}));
 app.use(bodyParser.json());
+
+router.use(function (req,res,next){
+	console.log("/" + req.method);
+	next();
+});
 
 //TODO: maybe add a function in GET to add new users to users.json
 
 //GET homepage
-app.get('/', function(req,res) {
+router.get('/', function(req,res) {
 	console.log("Oh hey, someone's checking out the homepage");
-	if(fs.existsSync('/home/pi/server/index.html')){
-		res.sendFile('/home/pi/server/index.html');
+	if(fs.existsSync(htmlPath +'index.html')){
+		res.sendFile(htmlPath +'index.html');
 	}else{
 		res.writeHead(200, {"Content-Type": "text/html"});
 		res.write("<html><head><title>No HTML provided</title></head><body>This server has not been provided a HTML file to serve. Please contact the webmaster.</body></html>");
@@ -43,9 +51,18 @@ app.get('/', function(req,res) {
 });
 
 //GET webhook route
-app.get('/api', (req,res) => {
+router.get('/api', (req,res) => {
 	//TODO: detect unsubscribe alert when the topic subscription runs out, use to automatically send a keep-alive to the Twitch API
 	console.log("GET request received at " + Date(Date.now()).toString());
+	if(!req.isXHub) {
+		console.log("No XHub signature");
+	}
+	else if(req.isXHubValid()){
+		console.log("Valid XHub signature");
+	}
+	else{
+		console.log("Nice try, but your signature is invalid.");
+	}
 	//console.log(Object.keys(req.query));
 	for(var i=0; i<Object.keys(req.query).length; i++)
 	{
@@ -63,10 +80,10 @@ app.get('/api', (req,res) => {
 });
 
 //POST webhook route
-app.post('/api', (req,res) => {
+router.post('/api', (req,res) => {
 	console.log("POST request received at " + Date(Date.now()).toString());
 	req.accepts('application/json');
-	if(req.isXHub) {
+	if(!req.isXHub) {
 		console.log("No XHub signature");
 	}
 	else if(req.isXHubValid()){
@@ -173,8 +190,10 @@ app.post('/api', (req,res) => {
 	res.send(req.body);
 });
 
+app.use("/",router);
+
 //GET anything else
-app.get('*', (req,res) => {
+app.use('*', (req,res) => {
 	res.status(404).send("Resource not found.");
 });
 // Starting both http & https servers
