@@ -154,6 +154,10 @@ app.post('/api', (req,res) => {
 	res.send(req.body);
 });
 
+//GET anything else
+app.get('*', (req,res) => {
+	res.status(404).send("Resource not found.");
+});
 // Starting both http & https servers
 const httpServer = http.createServer(app);
 const httpsServer = https.createServer(credentials, app);
