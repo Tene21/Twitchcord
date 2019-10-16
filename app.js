@@ -118,7 +118,6 @@ app.post('/api', (req,res) => {
 				var strTime = hours + ':' + minutes + ampm;
 				var date = start_time.toLocaleString('default', {month: 'long', timeZone: 'UTC'}) + " " + start_time.toLocaleString('default', {day: '2-digit'}) + ", " + start_time.toLocaleString('default', {year: 'numeric'});
 				var longDate = start_time.toLocaleString('default', {month: 'long', timeZone: 'UTC'}) + " " + start_time.toLocaleString('default', {day: '2-digit'}) + ", " + start_time.toLocaleString('default', {year: 'numeric'}) + " at " + strTime;
-				fs.appendFileSync("log.txt", user_name + " started playing " + gameName + " at " + longDate + " with title " + title +" for " + user_count + " viewers.\nCurrent time is: " + time_now.toLocaleTimeString() + "\n");
 				if(fs.existsSync("laststream.json")){
 					lastStreamJSON = fs.readFileSync("laststream.json", "utf8");
 					console.log(lastStreamJSON);
