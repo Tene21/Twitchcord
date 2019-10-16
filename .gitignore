@@ -20,3 +20,6 @@ secret
 
 # Client ID
 clientid
+
+# Dependencies
+node_modules/
