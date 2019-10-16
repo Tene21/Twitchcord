@@ -4,10 +4,12 @@ const http = require('http');
 const https = require('https');
 const imgur = require('imgur');
 const express = require('express');
+const xhub = require('express-x-hub');
 const bodyParser = require('body-parser');
 
 const app = express();
 const clientID = fs.readFileSync("clientid", "utf8");
+const clientSecret = fs.readFileSync("secret", "utf8");
 
 // Certificate
 const privateKey = fs.readFileSync('/etc/letsencrypt/live/tene.dev/privkey.pem', 'utf8');
