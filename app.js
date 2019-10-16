@@ -23,7 +23,10 @@ const credentials = {
 var lastStreamJSON;
 var currentIndex;
 
+app.use(xhub({ algorithm: 'sha256', secret: clientSecret}));
 app.use(bodyParser.json());
+
+//TODO: maybe add a function in GET to add new users to users.json
 
 //GET homepage
 app.get('/', function(req,res) {
@@ -55,10 +58,19 @@ app.get('/api', (req,res) => {
 app.post('/api', (req,res) => {
 	console.log("POST request received at " + Date(Date.now()).toString());
 	req.accepts('application/json');
+	if(req.isXHub) {
+		console.log("No XHub signature");
+	}
+	else if(req.isXHubValid()){
+		console.log("Valid XHub signature");
+	}
+	else{
+		console.log("Nice try, but your signature is invalid.");
+	}
 	console.log(req.body);
 	var stringified = JSON.stringify(req.body);
 	//in case any characters need escaped
-	stringified = stringified.replace(/\\n/g, "\\n")  
+	stringified = stringified.replace(/\\n/g, "\\n")
                .replace(/\\'/g, "\\'")
                .replace(/\\"/g, '\\"')
                .replace(/\\&/g, "\\&")
