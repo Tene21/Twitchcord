@@ -35,8 +35,20 @@ app.get('/', function(req,res) {
 app.get('/api', (req,res) => {
 	//TODO: detect unsubscribe alert when the topic subscription runs out, use to automatically send a keep-alive to the Twitch API
 	console.log("GET request received at " + Date(Date.now()).toString());
-	console.log(req.query['hub.challenge']);
-	res.status(200).send(req.query['hub.challenge']);
+	//console.log(Object.keys(req.query));
+	for(var i=0; i<Object.keys(req.query).length; i++)
+	{
+		if(Object.keys(req.query)[i] == 'hub.challenge')
+		{
+			console.log("hub.challenge exists");
+			res.send(req.query['hub.challenge']);
+			break;
+		}
+		console.log("hub.challenge does not exist");
+		res.send("Proper query not detected.");
+	}
+	//console.log(req.query);
+	res.status(200);
 });
 
 //POST webhook route
