@@ -16,7 +16,8 @@ Relies on local JSON files storing essential data regarding target streams, in t
 		"webhook_url": "The path to the Discord webhook endpoint, starting with /api/webhooks/...",
 		"internal_id": "The internal ID of the streamer, obtained by observing the URL of their stream thumbnails. Often just their username in lowercase, but has sometimes been observed to be different.",
 		"user_id": "The numeric ID of the user",
-		"accent_colour": "The colour to be used as the accent on the Discord message embed"
+		"accent_colour": "The colour to be used as the accent on the Discord message embed",
+		"profile_image": "The filename of the user's profile image on the Twitch CDN"
 	}]
 }
 ```
