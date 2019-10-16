@@ -1,0 +1,16 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Generated JSON files
+*.json
+
+# PM2 save
+*.*.save
+
+# Secret file
+secret
+
+# HTML
+*.html
