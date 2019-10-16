@@ -33,7 +33,13 @@ app.use(bodyParser.json());
 //GET homepage
 app.get('/', function(req,res) {
 	console.log("Oh hey, someone's checking out the homepage");
-	res.sendFile('/home/pi/server/index.html');
+	if(fs.existsSync('/home/pi/server/index.html')){
+		res.sendFile('/home/pi/server/index.html');
+	}else{
+		res.writeHead(200, {"Content-Type": "text/html"});
+		res.write("<html><head><title>No HTML provided</title></head><body>This server has not been provided a HTML file to serve. Please contact the webmaster.</body></html>");
+		res.end();
+	}
 });
 
 //GET webhook route
