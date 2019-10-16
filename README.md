@@ -34,3 +34,7 @@ The server also stores data regarding the previous stream of each user in a simi
 	}]
 }
 ```
+
+## Serving webpages
+
+The server is capable of serving HTML pages, and will attempt to serve index.html upon receiving a GET request at a root path, otherwise it will serve a generic page warning that no HTML was provided.
