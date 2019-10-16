@@ -238,7 +238,7 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
 				embeds:[{
 					color: usersJSON.users[i].accent_colour,
 					author:{
-						icon_url: "https://static-cdn.jtvnw.net/jtv_user_pictures/" + usersJSON.users[i].profile_image
+						icon_url: "https://static-cdn.jtvnw.net/jtv_user_pictures/" + usersJSON.users[i].profile_image,
 						name: userName,
 						url: "http://twitch.tv/" + usersJSON.users[i].user_name
 					},
