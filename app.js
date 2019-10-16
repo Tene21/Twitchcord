@@ -190,7 +190,7 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
 	var usersJSONInput = fs.readFileSync("users.json", "utf8");
 	console.log(usersJSONInput);
 	usersString = JSON.stringify(usersJSONInput)
-	userString = usersString.replace(/\\n/g, "\\n")  
+	userString = usersString.replace(/\\n/g, "\\n")
                .replace(/\\'/g, "\\'")
                .replace(/\\"/g, '\\"')
                .replace(/\\&/g, "\\&")
@@ -202,14 +202,14 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
 	console.log(usersJSON);
 	console.log(usersJSON.users);
 	//FAILED ATTEMPT TO AVOID DISCORD IMAGE CACHING ISSUES BY REUPLOADING TO IMGUR
-	/* 
+	/*
 	imgur.uploadUrl(thumbnailURL)
 		.then(function (imgurJSON) {
 			console.log("Imgur thumbnail: " + imgurJSON.data.link);
 		})
 		.catch(function (err) {
 			console.error(err.message);
-		}); 
+		});
 		*/
 	console.log("Checking if user is in users.json");
 	for(var i = 0; i < usersJSON.users.length; i++)
@@ -262,7 +262,7 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
 					'Content-Type': 'application/json'
 				}
 			}
-			
+
 			botReq = https.request(botOptions, botRes => {
 				botRes.on('data', d => {
 					process.stdout.write(d)
