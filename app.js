@@ -217,12 +217,11 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
 			data = JSON.stringify({
 				content:message,
 				embeds:[{
-					color:6570405,
+					color: usersJSON.users[i].accent_colour,
 					author:{
 						icon_url: "https://static-cdn.jtvnw.net/jtv_user_pictures/" + usersJSON.users[i].internal_id + "-profile_image-602e91b1edb132e8-300x300.png",
 						name: userName,
-						url: "http://twitch.tv/" + usersJSON.users[i].user_name,
-						
+						url: "http://twitch.tv/" + usersJSON.users[i].user_name
 					},
 					description: "[" + streamTitle + "](http://twitch.tv/" + usersJSON.users[i].user_name +")",
 					thumbnail: {
