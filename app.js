@@ -269,9 +269,8 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
 			newLastStreamString = JSON.stringify(lastStreamParsed, null, 2);
 			console.log(newLastStreamString);
 			fs.writeFileSync("laststream.json", newLastStreamString);
-		}else{
-			console.log("Wait a minute... who *are* you?");
+			break;
 		}
-		
 	}
+	console.log("User not in JSON. Please add their data to users.json");
 }
