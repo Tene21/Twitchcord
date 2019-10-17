@@ -23,7 +23,7 @@ Relies on local JSON files storing essential data regarding target streams, in t
 ```
 Note that `"users"` is an array, allowing for expansion to function for multiple streamers.
 
-## Latest stream
+### Latest stream
 
 The server also stores data regarding the previous stream of each user in a similar array for comparison to incoming alerts.
 ```JSON
