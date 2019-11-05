@@ -6,6 +6,7 @@ const imgur = require('imgur');
 const express = require('express');
 const xhub = require('express-x-hub');
 const bodyParser = require('body-parser');
+const schedule = require('node-schedule');
 
 const app = express();
 const router = express.Router();
@@ -26,13 +27,67 @@ const credentials = {
 
 var lastStreamJSON;
 var currentIndex;
+var usersJSONInput = fs.readFileSync("users.json", "utf8");
+var usersString = JSON.stringify(usersJSONInput)
+userString = usersString.replace(/\\n/g, "\\n")
+						 .replace(/\\'/g, "\\'")
+						 .replace(/\\"/g, '\\"')
+						 .replace(/\\&/g, "\\&")
+						 .replace(/\\r/g, "\\r")
+						 .replace(/\\t/g, "\\t")
+						 .replace(/\\b/g, "\\b")
+						 .replace(/\\f/g, "\\f");
+var usersJSON = JSON.parse(usersJSONInput);
+
+//automatically refresh topic subscriptions every day at midnight
+var j = schedule.scheduleJob('0 0 * * *', function(){
+	for(var i = 0; i < usersJSON.users.length; i++)
+	{
+		console.log("Refreshing subscription for " + usersJSON.users[i].user_name + "...");
+		if(usersJSON.users[i].user_name == "TestUser")
+		{
+			console.log("Test user doesn't need refreshed.");
+			continue;
+		}
+		var userID = usersJSON.users[i].user_id;
+		var refreshHeaders= { 'Content-Type': 'application/json', 'Client-ID': clientID};
+		var refreshJSON = {
+			'hub.callback':'http://www.tene.dev/api',
+			'hub.mode':'subscribe',
+			'hub.topic':'https://api.twitch.tv/helix/streams?user_id=' + usersJSON.users[i].user_id,
+			'hub.lease_seconds':86400,
+			'hub.secret':clientSecret
+		}
+		var refreshData = JSON.stringify(refreshJSON);
+		refreshOptions= {
+			hostname: 'api.twitch.tv',
+			path: '/helix/webhooks/hub?hub.callback=http://www.tene.dev/api&hub.mode=subscribe&hub.topic=https://api.twitch.tv/helix/streams?user_id=' + usersJSON.users[i].user_id + '&hub.lease_seconds=86400&hub.secret=' + clientSecret,
+			method: 'POST',
+			headers: refreshHeaders
+		}
+		console.log(refreshOptions);
+		refreshReq = https.request(refreshOptions, (refreshRes) => {
+			refreshRes.on('data', d => {
+				process.stdout.write(d)
+			});
+			refreshRes.on('end', function () {
+				console.log("Subscription refreshed.");
+			})
+			refreshReq.on('error', error => {
+				console.error (error)
+			});
+		});
+		refreshReq.write('');
+		refreshReq.end();
+	}
+})
 
 app.use(express.static(__dirname + '/views'));
 app.use(xhub({ algorithm: 'sha256', secret: clientSecret}));
 app.use(bodyParser.json());
 
 router.use(function (req,res,next){
-	console.log("/" + req.method);
+	console.log("/" + req.method + " from " + req.ip);
 	next();
 });
 
@@ -211,40 +266,29 @@ httpsServer.listen(443, () => {
 //SEND POST REQUEST TO DISCORD WEBHOOK URL
 function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate, hour, lastStream, jsonIndex, fullTimeStamp){
 	var message;
-	var imgurURL;
-	var usersJSONInput = fs.readFileSync("users.json", "utf8");
+	var imgurURL = "";
 	console.log(usersJSONInput);
-	usersString = JSON.stringify(usersJSONInput)
-	userString = usersString.replace(/\\n/g, "\\n")
-               .replace(/\\'/g, "\\'")
-               .replace(/\\"/g, '\\"')
-               .replace(/\\&/g, "\\&")
-               .replace(/\\r/g, "\\r")
-               .replace(/\\t/g, "\\t")
-               .replace(/\\b/g, "\\b")
-               .replace(/\\f/g, "\\f");
-	usersJSON = JSON.parse(usersJSONInput);
 	console.log(usersJSON);
 	console.log(usersJSON.users);
 	//FAILED ATTEMPT TO AVOID DISCORD IMAGE CACHING ISSUES BY REUPLOADING TO IMGUR
-	/*
-	imgur.uploadUrl(thumbnailURL)
-		.then(function (imgurJSON) {
-			console.log("Imgur thumbnail: " + imgurJSON.data.link);
-		})
-		.catch(function (err) {
-			console.error(err.message);
-		});
-		*/
 	console.log("Checking if user is in users.json");
 	for(var i = 0; i < usersJSON.users.length; i++)
 	{
-		var thumbnailURL = "https://static-cdn.jtvnw.net/previews-ttv/live_user_" + usersJSON.users[i].internal_id + "-640x360.jpg";
+		var thumbnailURL = "https://static-cdn.jtvnw.net/previews-ttv/live_user_" + usersJSON.users[i].internal_id + "-320x180.jpg"
 		console.log(usersJSON.users[i]);
 		console.log("Checking index " + i + " for user " + userName);
 		console.log("Comparing " + userName + " to " + usersJSON.users[i].user_name);
 		if(usersJSON.users[i].user_name == userName){
 			console.log(userName + " and " + usersJSON.users[i].user_name + " match, proceeding...");
+			imgur.uploadUrl(thumbnailURL)
+				.then(function (imgurJSON) {
+					console.log("Original thumbnail: " + thumbnailURL);
+					console.log("Imgur thumbnail: " + imgurJSON.data.link);
+					imgurURL = imgurJSON.data.link;
+				})
+				.catch(function (err) {
+					console.error(err.message);
+				});
 			if(reason == "new stream")
 			{
 				message = usersJSON.users[i].stream_message;
