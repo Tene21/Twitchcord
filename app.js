@@ -105,6 +105,17 @@ router.get('/', function(req,res) {
 	}
 });
 
+//GET laptop start pages
+router.get('/start', (req,res) => {
+	if(fs.existsSync(htmlPath +'startpage.html')){
+		res.sendFile(htmlPath +'startpage.html');
+	}else{
+		res.writeHead(200, {"Content-Type": "text/html"});
+		res.write("<html><head><title>No HTML provided</title></head><body>This server has not been provided a HTML file to serve. Please contact the webmaster.</body></html>");
+		res.end();
+	}
+})
+
 //GET webhook route
 router.get('/api', (req,res) => {
 	//TODO: detect unsubscribe alert when the topic subscription runs out, use to automatically send a keep-alive to the Twitch API
