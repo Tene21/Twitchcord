@@ -353,6 +353,7 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
 			fs.writeFileSync("laststream.json", newLastStreamString);
 			break;
 		}
+		console.log("User not in JSON. Please add their data to users.json");
 	}
-	console.log("User not in JSON. Please add their data to users.json");
+
 }
