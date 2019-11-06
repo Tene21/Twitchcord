@@ -154,106 +154,109 @@ router.post('/api', (req,res) => {
 	}
 	else if(req.isXHubValid()){
 		console.log("Valid XHub signature");
+		console.log("Headers:");
+		console.log(JSON.stringify(req.headers));
+		var stringified = JSON.stringify(req.body);
+		//in case any characters need escaped
+		stringified = stringified.replace(/\\n/g, "\\n")
+	               .replace(/\\'/g, "\\'")
+	               .replace(/\\"/g, '\\"')
+	               .replace(/\\&/g, "\\&")
+	               .replace(/\\r/g, "\\r")
+	               .replace(/\\t/g, "\\t")
+	               .replace(/\\b/g, "\\b")
+	               .replace(/\\f/g, "\\f");
+		console.log(stringified);
+		json = JSON.parse(stringified);
+		if(json.data !== undefined && json.data.length > 0){
+			var gameHeaders = { "Client-ID": clientID };
+			var gameName;
+			var game_id = json.data[0].game_id;
+			var options = {
+				hostname: 'api.twitch.tv',
+				path: '/helix/games?id=' + game_id,
+				method: 'GET',
+				headers: gameHeaders
+				}
+				console.log(options);
+			var gameReq = https.request(options, (gameRes) => {
+				let data = '';
+				gameRes.on('data', (d) => {
+					data += d;
+				});
+				gameRes.on('end', () => {
+					gameJSON = JSON.parse(data);
+					console.log(gameJSON);
+					gameName = gameJSON.data[0].name;
+					console.log("Game: " + gameName);
+					var user_name = json.data[0].user_name;
+					var title = json.data[0].title;
+					var start_time = new Date(json.data[0].started_at /*+ " +0100"*/);
+					console.log(start_time);
+					var time_now = new Date(Date.now());
+					var user_count = json.data[0].viewer_count;
+					var hours = start_time.toLocaleString('default', {hour: 'numeric'});
+					var minutes = start_time.toLocaleString('default', {minute: '2-digit'});
+					var ampm = hours >= 12 ? 'PM' : 'AM';
+					hours = hours % 12;
+					hours = hours <10 ? '0'+hours : hours;
+					minutes = minutes < 10 ? '0'+minutes : minutes;
+					var strTime = hours + ':' + minutes + ampm;
+					var date = start_time.toLocaleString('default', {month: 'long', timeZone: 'UTC'}) + " " + start_time.toLocaleString('default', {day: '2-digit'}) + ", " + start_time.toLocaleString('default', {year: 'numeric'});
+					var longDate = start_time.toLocaleString('default', {month: 'long', timeZone: 'UTC'}) + " " + start_time.toLocaleString('default', {day: '2-digit'}) + ", " + start_time.toLocaleString('default', {year: 'numeric'}) + " at " + strTime;
+					if(fs.existsSync("laststream.json")){
+						lastStreamJSON = fs.readFileSync("laststream.json", "utf8");
+						console.log(lastStreamJSON);
+					}else{
+						fs.writeFileSync("laststream.json");
+					}
+					var lastGame;
+					var lastStreamTimestamp;
+					var lastStream = JSON.parse(lastStreamJSON);
+					if(lastStream.users !== undefined && lastStream.users.length > 0){
+						console.log("Logs exist");
+						for(var j = 0; j < lastStream.users.length; j++){
+							console.log("Checking logs in index " + j);
+							if(user_name == lastStream.users[j].user_name){
+								console.log("User " + user_name + " has a log, comparing...");
+								currentIndex = j;
+								console.log(currentIndex);
+								lastGame = lastStream.users[j].game;
+								lastStreamTimestamp = lastStream.users[j].timestamp;
+							}
+						}
+					}
+					console.log("Current index: " + currentIndex);
+					var oldDate = new Date(lastStreamTimestamp);
+					var newDate  = new Date(start_time);
+					var streamDiff = newDate - oldDate;
+					if(streamDiff > 8 * 36e5){
+						console.log("More than 8 hours since last stream, new stream");
+						sendToBot(user_name, gameName, title, longDate, "new stream", date, start_time.toLocaleString('default', {hour: '2-digit'}), lastStream, currentIndex, start_time);
+					}else if(lastGame != gameName){
+						console.log("Less than 8 hours since last stream but game has changed");
+						sendToBot(user_name, gameName, title, longDate, "new game", date, start_time.toLocaleString('default', {hour: '2-digit'}), lastStream, currentIndex, start_time);
+					}else{
+						console.log("<8 hours since last stream, game has not changed");
+					}
+				});
+			});
+			gameReq.on('error', (error) => {
+				console.error(error)
+			})
+			gameReq.end();
+			//EVERYTHING SHOULD WORK HERE, TEST DISCORD WEBHOOK POST NEXT
+		}else
+		{
+			console.log("Empty array, stream is offline.");
+		}
+		res.send(req.body);
 	}
 	else{
 		console.log("Nice try, but your signature is invalid.");
 	}
-	console.log(req.body);
-	var stringified = JSON.stringify(req.body);
-	//in case any characters need escaped
-	stringified = stringified.replace(/\\n/g, "\\n")
-               .replace(/\\'/g, "\\'")
-               .replace(/\\"/g, '\\"')
-               .replace(/\\&/g, "\\&")
-               .replace(/\\r/g, "\\r")
-               .replace(/\\t/g, "\\t")
-               .replace(/\\b/g, "\\b")
-               .replace(/\\f/g, "\\f");
-	console.log(stringified);
-	json = JSON.parse(stringified);
-	if(json.data !== undefined && json.data.length > 0){
-		var gameHeaders = { "Client-ID": clientID };
-		var gameName;
-		var game_id = json.data[0].game_id;
-		var options = {
-			hostname: 'api.twitch.tv',
-			path: '/helix/games?id=' + game_id,
-			method: 'GET',
-			headers: gameHeaders
-			}
-			console.log(options);
-		var gameReq = https.request(options, (gameRes) => {
-			let data = '';
-			gameRes.on('data', (d) => {
-				data += d;
-			});
-			gameRes.on('end', () => {
-				gameJSON = JSON.parse(data);
-				console.log(gameJSON);
-				gameName = gameJSON.data[0].name;
-				console.log("Game: " + gameName);
-				var user_name = json.data[0].user_name;
-				var title = json.data[0].title;
-				var start_time = new Date(json.data[0].started_at /*+ " +0100"*/);
-				console.log(start_time);
-				var time_now = new Date(Date.now());
-				var user_count = json.data[0].viewer_count;
-				var hours = start_time.toLocaleString('default', {hour: 'numeric'});
-				var minutes = start_time.toLocaleString('default', {minute: '2-digit'});
-				var ampm = hours >= 12 ? 'PM' : 'AM';
-				hours = hours % 12;
-				hours = hours <10 ? '0'+hours : hours;
-				minutes = minutes < 10 ? '0'+minutes : minutes;
-				var strTime = hours + ':' + minutes + ampm;
-				var date = start_time.toLocaleString('default', {month: 'long', timeZone: 'UTC'}) + " " + start_time.toLocaleString('default', {day: '2-digit'}) + ", " + start_time.toLocaleString('default', {year: 'numeric'});
-				var longDate = start_time.toLocaleString('default', {month: 'long', timeZone: 'UTC'}) + " " + start_time.toLocaleString('default', {day: '2-digit'}) + ", " + start_time.toLocaleString('default', {year: 'numeric'}) + " at " + strTime;
-				if(fs.existsSync("laststream.json")){
-					lastStreamJSON = fs.readFileSync("laststream.json", "utf8");
-					console.log(lastStreamJSON);
-				}else{
-					fs.writeFileSync("laststream.json");
-				}
-				var lastGame;
-				var lastStreamTimestamp;
-				var lastStream = JSON.parse(lastStreamJSON);
-				if(lastStream.users !== undefined && lastStream.users.length > 0){
-					console.log("Logs exist");
-					for(var j = 0; j < lastStream.users.length; j++){
-						console.log("Checking logs in index " + j);
-						if(user_name == lastStream.users[j].user_name){
-							console.log("User " + user_name + " has a log, comparing...");
-							currentIndex = j;
-							console.log(currentIndex);
-							lastGame = lastStream.users[j].game;
-							lastStreamTimestamp = lastStream.users[j].timestamp;
-						}
-					}
-				}
-				console.log("Current index: " + currentIndex);
-				var oldDate = new Date(lastStreamTimestamp);
-				var newDate  = new Date(start_time);
-				var streamDiff = newDate - oldDate;
-				if(streamDiff > 8 * 36e5){
-					console.log("More than 8 hours since last stream, new stream");
-					sendToBot(user_name, gameName, title, longDate, "new stream", date, start_time.toLocaleString('default', {hour: '2-digit'}), lastStream, currentIndex, start_time);
-				}else if(lastGame != gameName){
-					console.log("Less than 8 hours since last stream but game has changed");
-					sendToBot(user_name, gameName, title, longDate, "new game", date, start_time.toLocaleString('default', {hour: '2-digit'}), lastStream, currentIndex, start_time);
-				}else{
-					console.log("<8 hours since last stream, game has not changed");
-				}
-			});
-		});
-		gameReq.on('error', (error) => {
-			console.error(error)
-		})
-		gameReq.end();
-		//EVERYTHING SHOULD WORK HERE, TEST DISCORD WEBHOOK POST NEXT
-	}else
-	{
-		console.log("Empty array, stream is offline.");
-	}
-	res.send(req.body);
+
+
 });
 
 app.use("/",router);
