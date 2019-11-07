@@ -41,27 +41,28 @@ var usersJSON = JSON.parse(usersJSONInput);
 
 //automatically refresh topic subscriptions every day at midnight
 var j = schedule.scheduleJob('0 0 * * *', function(){
-	for(var i = 0; i < usersJSON.users.length; i++)
+	for(let i = 0; i < usersJSON.users.length; i++)
 	{
-		console.log("Refreshing subscription for " + usersJSON.users[i].user_name + "...");
-		if(usersJSON.users[i].user_name == "TestUser")
+		let currentUser = usersJSON.users[i].user_name;
+		console.log("Refreshing subscription for " + currentUser + "...");
+		if(currentUser == "TestUser")
 		{
 			console.log("Test user doesn't need refreshed.");
 			continue;
 		}
 		var userID = usersJSON.users[i].user_id;
 		var refreshHeaders= { 'Content-Type': 'application/json', 'Client-ID': clientID};
-		var refreshJSON = {
+		var refreshJSON = JSON.stringify({
 			'hub.callback':'http://www.tene.dev/api',
 			'hub.mode':'subscribe',
 			'hub.topic':'https://api.twitch.tv/helix/streams?user_id=' + usersJSON.users[i].user_id,
 			'hub.lease_seconds':86400,
 			'hub.secret':clientSecret
-		}
+		});
 		var refreshData = JSON.stringify(refreshJSON);
 		refreshOptions= {
 			hostname: 'api.twitch.tv',
-			path: '/helix/webhooks/hub?hub.callback=http://www.tene.dev/api&hub.mode=subscribe&hub.topic=https://api.twitch.tv/helix/streams?user_id=' + usersJSON.users[i].user_id + '&hub.lease_seconds=86400&hub.secret=' + clientSecret,
+			path: '/helix/webhooks/hub',
 			method: 'POST',
 			headers: refreshHeaders
 		}
@@ -71,13 +72,13 @@ var j = schedule.scheduleJob('0 0 * * *', function(){
 				process.stdout.write(d)
 			});
 			refreshRes.on('end', function () {
-				console.log("Subscription refreshed.");
+				console.log("Subscription for " + currentUser + " refreshed.");
 			})
 			refreshReq.on('error', error => {
 				console.error (error)
 			});
 		});
-		refreshReq.write('');
+		refreshReq.write(refreshJSON);
 		refreshReq.end();
 	}
 })
@@ -118,7 +119,7 @@ router.get('/start', (req,res) => {
 
 //GET webhook route
 router.get('/api', (req,res) => {
-	//TODO: detect unsubscribe alert when the topic subscription runs out, use to automatically send a keep-alive to the Twitch API
+	console.log(JSON.stringify(req.headers));
 	console.log("GET request received at " + Date(Date.now()).toString());
 	if(!req.isXHub) {
 		console.log("No XHub signature");
