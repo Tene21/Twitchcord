@@ -289,7 +289,7 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
 	console.log("Checking if user is in users.json");
 	for(var i = 0; i < usersJSON.users.length; i++)
 	{
-		var thumbnailURL = "https://static-cdn.jtvnw.net/previews-ttv/live_user_" + usersJSON.users[i].internal_id + "-640x360.jpg"
+		var thumbnailURL = "https://static-cdn.jtvnw.net/previews-ttv/live_user_" + usersJSON.users[i].internal_id + "-640x360.jpg?" + fullTimeStamp;
 		console.log(usersJSON.users[i]);
 		console.log("Checking index " + i + " for user " + userName);
 		console.log("Comparing " + userName + " to " + usersJSON.users[i].user_name);
