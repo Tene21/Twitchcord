@@ -310,6 +310,7 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
 			}else if (reason == "new game")
 			{
 				message = usersJSON.users[i].game_message;
+				thumbnailURL = thumbnailURL + "&newgame";
 			}
 			data = JSON.stringify({
 				content:message,
