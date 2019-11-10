@@ -176,6 +176,7 @@ router.post('/api', (req,res) => {
 			var gameHeaders = { "Client-ID": clientID };
 			var gameName;
 			var game_id = json.data[0].game_id;
+			console.log("Game ID: " + game_id);
 			var options = {
 				hostname: 'api.twitch.tv',
 				path: '/helix/games?id=' + game_id,
@@ -288,6 +289,9 @@ httpsServer.listen(443, () => {
 function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate, hour, lastStream, jsonIndex, fullTimeStamp){
 	var message;
 	var imgurURL = "";
+	console.log("Full timestamp: "+ fullTimeStamp );
+	console.log("Start time: " + startTime);
+	console.log("Short date: " + shortDate);
 	console.log(usersJSONInput);
 	console.log(usersJSON);
 	console.log(usersJSON.users);
