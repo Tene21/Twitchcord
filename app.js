@@ -298,15 +298,6 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
 		console.log("Comparing " + userName + " to " + usersJSON.users[i].user_name);
 		if(usersJSON.users[i].user_name == userName){
 			console.log(userName + " and " + usersJSON.users[i].user_name + " match, proceeding...");
-			imgur.uploadUrl(thumbnailURL)
-				.then(function (imgurJSON) {
-					console.log("Original thumbnail: " + thumbnailURL);
-					console.log("Imgur thumbnail: " + imgurJSON.data.link);
-					imgurURL = imgurJSON.data.link;
-				})
-				.catch(function (err) {
-					console.error(err.message);
-				});
 			if(reason == "new stream")
 			{
 				message = usersJSON.users[i].stream_message;
