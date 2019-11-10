@@ -150,15 +150,16 @@ router.get('/api', (req,res) => {
 router.post('/api', (req,res) => {
 	console.log("POST request received at " + Date(Date.now()).toString());
 	req.accepts('application/json');
-	if(!req.isXHub) {
+	console.log("Headers:");
+	console.log(JSON.stringify(req.headers));
+	reqHeaders = JSON.parse(JSON.stringify(req.headers));
+	if(!req.isXHub/* && !req.headers.secret == clientSecret*/) {
 		console.log("No XHub signature");
 		res.status(403);
 		res.send();
 	}
-	else if(req.isXHubValid()){
+	else if(/*req.headers.secret == clientSecret || */req.isXHubValid()){
 		console.log("Valid XHub signature");
-		console.log("Headers:");
-		console.log(JSON.stringify(req.headers));
 		var stringified = JSON.stringify(req.body);
 		//in case any characters need escaped
 		stringified = stringified.replace(/\\n/g, "\\n")
