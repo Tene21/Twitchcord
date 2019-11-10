@@ -300,7 +300,7 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
 	for(var i = 0; i < usersJSON.users.length; i++)
 	{
 		lastStreamParsed = JSON.parse(lastStreamJSON);
-		var gameChangedCount = lastStreamParsed.users[jsonIndex].gamechangedcount;
+		var gameChangedCount = lastStreamParsed.users[jsonIndex].game_changed_count;
 		var thumbnailURL = "https://static-cdn.jtvnw.net/previews-ttv/live_user_" + usersJSON.users[i].internal_id + "-640x360.jpg?" + fullTimeStamp;
 		console.log(usersJSON.users[i]);
 		console.log("Checking index " + i + " for user " + userName);
@@ -368,7 +368,7 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
 			console.log("Modifying JSON...");
 			lastStreamParsed.users[jsonIndex].game = gameName;
 			lastStreamParsed.users[jsonIndex].timestamp = fullTimeStamp;
-			lastStreamParsed.users[jsonIndex].gamechangedcount = gameChangedCount;
+			lastStreamParsed.users[jsonIndex].game_changed_count = gameChangedCount;
 			newLastStreamString = JSON.stringify(lastStreamParsed, null, 2);
 			console.log(newLastStreamString);
 			fs.writeFileSync("laststream.json", newLastStreamString);
