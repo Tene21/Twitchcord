@@ -152,6 +152,8 @@ router.post('/api', (req,res) => {
 	req.accepts('application/json');
 	if(!req.isXHub) {
 		console.log("No XHub signature");
+		res.status(403);
+		res.send();
 	}
 	else if(req.isXHubValid()){
 		console.log("Valid XHub signature");
@@ -255,6 +257,7 @@ router.post('/api', (req,res) => {
 	}
 	else{
 		console.log("Nice try, but your signature is invalid.");
+		res.status(403).send();
 	}
 
 
