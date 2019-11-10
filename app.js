@@ -310,6 +310,7 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
 			if(reason == "new stream")
 			{
 				message = usersJSON.users[i].stream_message;
+				gameChangedCount = 0;
 			}else if (reason == "new game")
 			{
 				gameChangedCount++;
