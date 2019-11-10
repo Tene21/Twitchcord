@@ -27,3 +27,6 @@ node_modules/
 # HTML folder
 views/
 views/*
+
+#misc text files
+*.txt
