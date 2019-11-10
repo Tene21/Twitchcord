@@ -196,7 +196,9 @@ router.post('/api', (req,res) => {
 					var user_name = json.data[0].user_name;
 					var title = json.data[0].title;
 					var start_time = new Date(json.data[0].started_at /*+ " +0100"*/);
+					var startTime = json.data[0].started_at;
 					console.log(start_time);
+					console.log(startTime);
 					var time_now = new Date(Date.now());
 					var user_count = json.data[0].viewer_count;
 					var hours = start_time.toLocaleString('default', {hour: 'numeric'});
@@ -236,10 +238,10 @@ router.post('/api', (req,res) => {
 					var streamDiff = newDate - oldDate;
 					if(streamDiff > 8 * 36e5){
 						console.log("More than 8 hours since last stream, new stream");
-						sendToBot(user_name, gameName, title, longDate, "new stream", date, start_time.toLocaleString('default', {hour: '2-digit'}), lastStream, currentIndex, start_time);
+						sendToBot(user_name, gameName, title, longDate, "new stream", date, start_time.toLocaleString('default', {hour: '2-digit'}), lastStream, currentIndex, startTime);
 					}else if(lastGame != gameName){
 						console.log("Less than 8 hours since last stream but game has changed");
-						sendToBot(user_name, gameName, title, longDate, "new game", date, start_time.toLocaleString('default', {hour: '2-digit'}), lastStream, currentIndex, start_time);
+						sendToBot(user_name, gameName, title, longDate, "new game", date, start_time.toLocaleString('default', {hour: '2-digit'}), lastStream, currentIndex, startTime);
 					}else{
 						console.log("<8 hours since last stream, game has not changed");
 					}
@@ -293,6 +295,8 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
 	console.log("Checking if user is in users.json");
 	for(var i = 0; i < usersJSON.users.length; i++)
 	{
+		lastStreamParsed = JSON.parse(lastStreamJSON);
+		var gameChangedCount = lastStreamParsed.users[jsonIndex].gamechangedcount;
 		var thumbnailURL = "https://static-cdn.jtvnw.net/previews-ttv/live_user_" + usersJSON.users[i].internal_id + "-640x360.jpg?" + fullTimeStamp;
 		console.log(usersJSON.users[i]);
 		console.log("Checking index " + i + " for user " + userName);
@@ -304,8 +308,10 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
 				message = usersJSON.users[i].stream_message;
 			}else if (reason == "new game")
 			{
+				gameChangedCount++;
+				console.log(userName + " has changed games " + gameChangedCount + " times this stream.");
 				message = usersJSON.users[i].game_message;
-				thumbnailURL = thumbnailURL + "&newgame";
+				thumbnailURL = thumbnailURL + "&newgame" + gameChangedCount;
 			}
 			data = JSON.stringify({
 				content:message,
@@ -316,7 +322,7 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
 						name: userName,
 						url: "http://twitch.tv/" + usersJSON.users[i].user_name
 					},
-					description: "[" + streamTitle + "](http://twitch.tv/" + usersJSON.users[i].user_name +")",
+					description: "[" + streamTitle + "](http://twitch.tv/" + usersJSON.users[i].internal_id +")",
 					thumbnail: {
 						url: "https://static-cdn.jtvnw.net/jtv_user_pictures/" + usersJSON.users[i].profile_image
 					},
@@ -356,13 +362,15 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
 			console.log("Outputting JSON");
 			console.log(lastStreamJSON);
 			console.log("Modifying JSON...");
-			lastStreamParsed = JSON.parse(lastStreamJSON);
 			lastStreamParsed.users[jsonIndex].game = gameName;
 			lastStreamParsed.users[jsonIndex].timestamp = fullTimeStamp;
+			lastStreamParsed.users[jsonIndex].gamechangedcount = gameChangedCount;
 			newLastStreamString = JSON.stringify(lastStreamParsed, null, 2);
 			console.log(newLastStreamString);
 			fs.writeFileSync("laststream.json", newLastStreamString);
 			break;
+		}else{
+			continue;
 		}
 		console.log("User not in JSON. Please add their data to users.json");
 	}
