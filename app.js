@@ -113,7 +113,7 @@ router.get('/', function(req,res) {
 	if(fs.existsSync(htmlPath +'index.html')){
 		res.sendFile(htmlPath +'index.html');
 	}else{
-		res.writeHead(200, {"Content-Type": "text/html"});
+		res.writeHead(404, {"Content-Type": "text/html"});
 		res.write("<html><head><title>No HTML provided</title></head><body>This server has not been provided a HTML file to serve. Please contact the webmaster.</body></html>");
 		res.end();
 	}
@@ -124,7 +124,7 @@ router.get('/start', (req,res) => {
 	if(fs.existsSync(htmlPath +'startpage.html')){
 		res.sendFile(htmlPath +'startpage.html');
 	}else{
-		res.writeHead(200, {"Content-Type": "text/html"});
+		res.writeHead(404, {"Content-Type": "text/html"});
 		res.write("<html><head><title>No HTML provided</title></head><body>This server has not been provided a HTML file to serve. Please contact the webmaster.</body></html>");
 		res.end();
 	}
