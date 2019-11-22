@@ -69,7 +69,7 @@ var j = schedule.scheduleJob('0 0 * * *', function(){
 			'hub.callback':'http://www.tene.dev/api',
 			'hub.mode':'subscribe',
 			'hub.topic':'https://api.twitch.tv/helix/streams?user_id=' + usersJSON.users[i].user_id,
-			'hub.lease_seconds':86400,
+			'hub.lease_seconds':86405,
 			'hub.secret':clientSecret
 		});
 		var refreshData = JSON.stringify(refreshJSON);
