@@ -233,7 +233,9 @@ router.post('/api', (req,res) => {
 					var hours = start_time.toLocaleString('default', {hour: 'numeric'});
 					var minutes = start_time.toLocaleString('default', {minute: '2-digit'});
 					var ampm = hours >= 12 ? 'PM' : 'AM';
-					hours = hours % 12;
+					if(hours != 12){
+						hours = hours % 12;
+					}
 					hours = hours <10 ? '0'+hours : hours;
 					minutes = minutes < 10 ? '0'+minutes : minutes;
 					var strTime = hours + ':' + minutes + ampm;
