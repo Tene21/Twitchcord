@@ -58,7 +58,7 @@ var j = schedule.scheduleJob('0 0 * * *', function(){
 	{
 		let currentUser = usersJSON.users[i].user_name;
 		console.log("Refreshing subscription for " + currentUser + "...");
-		if(currentUser == "TestUser")
+		if(usersJSON.users[i].user_id == "test_id")
 		{
 			console.log("Test user doesn't need refreshed.");
 			continue;
