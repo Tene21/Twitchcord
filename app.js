@@ -250,6 +250,7 @@ router.post('/api', (req,res) => {
 					var lastGame;
 					var lastStreamTimestamp;
 					var lastStream = JSON.parse(lastStreamJSON);
+					var isNewUser;
 					if(lastStream.users !== undefined && lastStream.users.length > 0){
 						console.log("Logs exist");
 						for(var j = 0; j < lastStream.users.length; j++){
@@ -260,6 +261,16 @@ router.post('/api', (req,res) => {
 								console.log(currentIndex);
 								lastGame = lastStream.users[j].game;
 								lastStreamTimestamp = lastStream.users[j].timestamp;
+								isNewUser = false;
+								break;
+							}
+							console.log("Current index: " + j + " and length: " + lastStream.users.length);
+							if(j == (lastStream.users.length - 1) && user_name != lastStream.users[j].user_name)
+							{
+								console.log("User " + user_name + " does not have a log.");
+								lastGame = "";
+								lastStreamTimestamp = "";
+								isNewUser = true;
 							}
 						}
 					}
@@ -269,10 +280,10 @@ router.post('/api', (req,res) => {
 					var streamDiff = newDate - oldDate;
 					if(streamDiff > 8 * 36e5){
 						console.log("More than 8 hours since last stream, new stream");
-						sendToBot(user_name, gameName, title, longDate, "new stream", date, start_time.toLocaleString('default', {hour: '2-digit'}), lastStream, currentIndex, startTime);
+						sendToBot(user_name, gameName, title, longDate, "new stream", date, start_time.toLocaleString('default', {hour: '2-digit'}), lastStream, currentIndex, startTime, isNewUser);
 					}else if(lastGame != gameName){
 						console.log("Less than 8 hours since last stream but game has changed");
-						sendToBot(user_name, gameName, title, longDate, "new game", date, start_time.toLocaleString('default', {hour: '2-digit'}), lastStream, currentIndex, startTime);
+						sendToBot(user_name, gameName, title, longDate, "new game", date, start_time.toLocaleString('default', {hour: '2-digit'}), lastStream, currentIndex, startTime, isNewUser);
 					}else{
 						console.log("<8 hours since last stream, game has not changed");
 					}
@@ -316,7 +327,7 @@ httpsServer.listen(443, () => {
 });
 
 //SEND POST REQUEST TO DISCORD WEBHOOK URL
-function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate, hour, lastStream, jsonIndex, fullTimeStamp){
+function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate, hour, lastStream, jsonIndex, fullTimeStamp, isNewUser){
 	var message;
 	var imgurURL = "";
 	console.log("Full timestamp: "+ fullTimeStamp );
@@ -325,28 +336,35 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
 	console.log(usersJSONInput);
 	console.log(usersJSON);
 	console.log(usersJSON.users);
-	//FAILED ATTEMPT TO AVOID DISCORD IMAGE CACHING ISSUES BY REUPLOADING TO IMGUR
+
 	console.log("Checking if user is in users.json");
 	for(var i = 0; i < usersJSON.users.length; i++)
 	{
 		lastStreamParsed = JSON.parse(lastStreamJSON);
-		var gameChangedCount = lastStreamParsed.users[jsonIndex].game_changed_count;
-		var thumbnailURL = "https://static-cdn.jtvnw.net/previews-ttv/live_user_" + usersJSON.users[i].internal_id + "-640x360.jpg?" + fullTimeStamp;
 		console.log(usersJSON.users[i]);
 		console.log("Checking index " + i + " for user " + userName);
 		console.log("Comparing " + userName + " to " + usersJSON.users[i].user_name);
 		if(usersJSON.users[i].user_name == userName){
 			console.log(userName + " and " + usersJSON.users[i].user_name + " match, proceeding...");
-			if(reason == "new stream")
-			{
+			console.log("Last stream index: " + jsonIndex);
+			var gameChangedCount;
+			var thumbnailURL = "https://static-cdn.jtvnw.net/previews-ttv/live_user_" + usersJSON.users[i].internal_id + "-640x360.jpg?" + fullTimeStamp;
+			if(!isNewUser){
+				if(reason == "new stream")
+				{
+					message = usersJSON.users[i].stream_message;
+					gameChangedCount = 0;
+				}else if (reason == "new game")
+				{
+					gameChangedCount = lastStreamParsed.users[jsonIndex].game_changed_count;
+					gameChangedCount++;
+					console.log(userName + " has changed games " + gameChangedCount + " times this stream.");
+					message = usersJSON.users[i].game_message;
+					thumbnailURL = thumbnailURL + "&newgame" + gameChangedCount;
+				}
+			}else{
 				message = usersJSON.users[i].stream_message;
 				gameChangedCount = 0;
-			}else if (reason == "new game")
-			{
-				gameChangedCount++;
-				console.log(userName + " has changed games " + gameChangedCount + " times this stream.");
-				message = usersJSON.users[i].game_message;
-				thumbnailURL = thumbnailURL + "&newgame" + gameChangedCount;
 			}
 			data = JSON.stringify({
 				content:message,
@@ -397,14 +415,22 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
 			console.log("Outputting JSON");
 			console.log(lastStreamJSON);
 			console.log("Modifying JSON...");
-			lastStreamParsed.users[jsonIndex].game = gameName;
-			lastStreamParsed.users[jsonIndex].timestamp = fullTimeStamp;
-			lastStreamParsed.users[jsonIndex].game_changed_count = gameChangedCount;
-			newLastStreamString = JSON.stringify(lastStreamParsed, null, 2);
-			console.log(newLastStreamString);
-			fs.writeFileSync("laststream.json", newLastStreamString);
-			break;
+			if(!isNewUser){
+				lastStreamParsed.users[jsonIndex].game = gameName;
+				lastStreamParsed.users[jsonIndex].timestamp = fullTimeStamp;
+				lastStreamParsed.users[jsonIndex].game_changed_count = gameChangedCount;
+				newLastStreamString = JSON.stringify(lastStreamParsed, null, 2);
+				console.log(newLastStreamString);
+				fs.writeFileSync("laststream.json", newLastStreamString);
+			}else if(isNewUser){
+				lastStreamParsed.users.push({user_name : userName, timestamp: fullTimeStamp, game: gameName, game_changed_count : 0})
+				newLastStreamString = JSON.stringify(lastStreamParsed, null, 2);
+				console.log(newLastStreamString);
+				fs.writeFileSync("laststream.json", newLastStreamString);
+			}
+			continue;
 		}else{
+			console.log(userName + " and " + usersJSON.users[i].user_name + " do not match, checking next entry...");
 			continue;
 		}
 		console.log("User not in JSON. Please add their data to users.json");
