@@ -134,15 +134,6 @@ router.get('/start', (req,res) => {
 router.get('/api', (req,res) => {
 	console.log(JSON.stringify(req.headers));
 	console.log("GET request received at " + Date(Date.now()).toString());
-	if(!req.isXHub) {
-		console.log("No XHub signature");
-	}
-	else if(req.isXHubValid()){
-		console.log("Valid XHub signature");
-	}
-	else{
-		console.log("Nice try, but your signature is invalid.");
-	}
 	//console.log(Object.keys(req.query));
 	for(var i=0; i<Object.keys(req.query).length; i++)
 	{
@@ -152,8 +143,32 @@ router.get('/api', (req,res) => {
 			res.send(req.query['hub.challenge']);
 			break;
 		}
-		console.log("hub.challenge does not exist");
-		res.send("Proper query not detected.");
+		if(i == (Object.keys(req.query).length - 1) && Object.keys(req.query)[i] != 'hub.challenge'){
+			console.log("hub.challenge does not exist");
+			res.send("Proper query not detected.");
+		}
+	}
+	//console.log(req.query);
+	res.status(200);
+});
+
+router.get('/api/yt', (req,res) =>{
+	console.log(JSON.stringify(req.headers));
+	console.log("GET request received at " + Date(Date.now()).toString());
+	//console.log(Object.keys(req.query));
+	for(var i=0; i<Object.keys(req.query).length; i++)
+	{
+		if(Object.keys(req.query)[i] == 'hub.challenge')
+		{
+			console.log("hub.challenge exists");
+			res.send(req.query['hub.challenge']);
+			break;
+		}
+		if(i == (Object.keys(req.query).length - 1) && Object.keys(req.query)[i] != 'hub.challenge'){
+			console.log("hub.challenge does not exist");
+			res.send("Proper query not detected.");
+		}
+
 	}
 	//console.log(req.query);
 	res.status(200);
