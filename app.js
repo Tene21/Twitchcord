@@ -41,6 +41,19 @@ var usersJSON = JSON.parse(usersJSONInput);
 
 //automatically refresh topic subscriptions every day at midnight
 var j = schedule.scheduleJob('0 0 * * *', function(){
+	console.log("Checking for changes in users.JSON...");
+	newUsersJSONInput = fs.readFileSync("users.json", "utf8");
+	if(newUsersJSONInput != usersJSONInput){
+		console.log("users.JSON has been modified. Loading new users.JSON...");
+		usersJSONInput = newUsersJSONInput;
+		usersJSON = newUsersJSONInput;
+		console.log("users.JSON loaded.");
+	}
+	else{
+		console.log("No changes detected.");
+	}
+	console.log("usersJSON:");
+	console.log(usersJSON);
 	for(let i = 0; i < usersJSON.users.length; i++)
 	{
 		let currentUser = usersJSON.users[i].user_name;
