@@ -213,6 +213,8 @@ router.get('/api/yt', (req, res) => {
   res.status(200);
 });
 
+//TODO: fix everything about this, it's an incredibly hacky workaround because i can't seem to get the actual notification data from the POST, so i just grab the user ID from the headers and make a manual request from there.
+//will likely only grab one video from any potential bulk upload.
 //POST youtube route
 router.post('/api/yt', (req, res) => {
   console.log(JSON.stringify(req.headers));
