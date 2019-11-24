@@ -12,7 +12,8 @@ npm-debug.log*
 # FTPconfig
 .ftpconfig
 
-# Secret file
+# Secret files
+youtubeKey
 secret
 
 # HTML
