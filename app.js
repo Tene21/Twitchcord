@@ -227,8 +227,8 @@ router.get('/api/yt', (req, res) => {
 //POST youtube route
 router.post('/api/yt', (req, res) => {
   var hasLog = false;
-  console.log(req.body);
-  console.log(JSON.stringify(req.headers));
+  //console.log(req.body);
+  //console.log(JSON.stringify(req.headers));
   if (req.body.feed['at:deleted.entry'] !== undefined) {
     console.log("Deleted video alert, ignore.");
     console.log("Also outputting deleted entry value out of curiosity.");
@@ -245,25 +245,25 @@ router.post('/api/yt', (req, res) => {
     yTTimestamp = req.body.feed.entry.published;
     youtubeJSON = JSON.parse(fs.readFileSync("youtubeusers.json", "utf8"));
     for (let i = 0; i < youtubeJSON.users.length; i++) {
-      console.log("Index: " + i + ", user: " + userID + ", compare to: " + youtubeJSON.users[i].id);
+      //console.log("Index: " + i + ", user: " + userID + ", compare to: " + youtubeJSON.users[i].id);
       if (userID == youtubeJSON.users[i].id) {
         console.log(userID + " is " + youtubeJSON.users[i].user);
-        console.log("Checking if user has a record.");
+        console.log("Checking if " + youtubeJSON.users[i].user + " has a record.");
         lastVideoJSON = JSON.parse(fs.readFileSync("lastvideo.json", "utf8"));
         //console.log(lastVideoJSON);
         for (let j = 0; j < lastVideoJSON.users.length; j++) {
-          console.log("Index: " + j + ", user: " + userID + ", compare to: " + lastVideoJSON.users[j].id);
+          //console.log("Index: " + j + ", user: " + userID + ", compare to: " + lastVideoJSON.users[j].id);
           if (lastVideoJSON.users[j].id == userID) {
             console.log(youtubeJSON.users[i].user + " has a record, previous video ID: " + lastVideoJSON.users[j].video_id);
             if (videoID != lastVideoJSON.users[j].video_id) {
               console.log("New video ID does not match logged ID, comparing timestamps.");
               var oldTime = new Date(lastVideoJSON.users[j].timestamp);
               var newTime = new Date(yTTimestamp);
-              console.log("Old: " + oldTime + ", new: " + newTime);
+              //console.log("Old: " + oldTime + ", new: " + newTime);
               ignoreTimeout = youtubeJSON.users[i].ignore_timeouts;
               timeout = youtubeJSON.users[i].timeout;
               var difference = newTime - oldTime;
-              console.log("ms difference: " + difference);
+              //console.log("ms difference: " + difference);
               console.log(difference * 6e4 + " minutes have passed since the last alert was sent");
               if (Math.sign(difference) != -1) {
                 if (!ignoreTimeout && difference < timeout * 6e4) {
