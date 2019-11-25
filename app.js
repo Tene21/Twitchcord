@@ -6,8 +6,11 @@ const imgur = require('imgur');
 const express = require('express');
 const xhub = require('express-x-hub');
 const bodyParser = require('body-parser');
+require('body-parser-xml')(bodyParser);
 const schedule = require('node-schedule');
 const FormData = require('form-data');
+const he = require('he');
+
 
 const app = express();
 const router = express.Router();
@@ -32,6 +35,7 @@ var currentIndex;
 var youtubeJSONInput = fs.readFileSync("youtubeusers.json", "utf8");
 var youtubeJSON = JSON.parse(youtubeJSONInput);
 var youtubeString = JSON.stringify(youtubeJSONInput);
+var lastVideoJSON = JSON.parse(fs.readFileSync("lastvideo.json", "utf8"));
 var usersJSONInput = fs.readFileSync("users.json", "utf8");
 var usersJSON = JSON.parse(usersJSONInput);
 
@@ -137,6 +141,11 @@ app.use(xhub({
   secret: clientSecret
 }));
 app.use(bodyParser.json());
+app.use(bodyParser.xml({
+  xmlParseOptions: {
+    explicitArray: false
+  }
+}));
 app.use(bodyParser.raw());
 
 router.use(function(req, res, next) {
@@ -217,168 +226,140 @@ router.get('/api/yt', (req, res) => {
 //will likely only grab one video from any potential bulk upload.
 //POST youtube route
 router.post('/api/yt', (req, res) => {
+  console.log(req.body);
   console.log(JSON.stringify(req.headers));
-  if (req.headers.link !== undefined) {
-    userID = req.headers.link.split(';', 1)[0].split('=')[1].slice(0, -1);
-    console.log(userID);
-  }
-  //GET https://www.googleapis.com/youtube/v3/search
-  console.log("Checking if " + userID + " matches a user in the logs.");
-  for (let i = 0; i < youtubeJSON.users.length; i++) {
-    if (userID == youtubeJSON.users[i].id) {
-      console.log(userID + " is " + youtubeJSON.users[i].user);
-      console.log("Checking if user has a record.");
-      lastVideoJSON = JSON.parse(fs.readFileSync("lastvideo.json", "utf8"));
-      for (let j = 0; j < lastVideoJSON.users.length; j++) {
-
-				lastVideoJSON = JSON.parse(fs.readFileSync("lastvideo.json", "utf8"));
-
-        if (lastVideoJSON.users[j].id == userID) {
-          //console.log("")
-          newYoutubeKey = youtubeKey.replace(/\\n/g, "\\n")
-            .replace(/\\'/g, "\\'")
-            .replace(/\\"/g, '\\"')
-            .replace(/\\&/g, "\\&")
-            .replace(/\\r/g, "\\r")
-            .replace(/\\t/g, "\\t")
-            .replace(/\\b/g, "\\b")
-            .replace(/\\f/g, "\\f");
-          var options = {
-            hostname: 'www.googleapis.com',
-            path: '/youtube/v3/search?part=snippet&channelId=' + userID + '&order=date&maxResults=1&key=' + newYoutubeKey,
-            method: 'GET'
-          }
-          console.log(options.path + "testforspaces");
-          var youtubeReq = https.request(options, (youtubeRes) => {
-            let data = '';
-            youtubeRes.on('data', (d) => {
-              data += d;
-            });
-            youtubeRes.on('end', () => {
-              videoJSON = JSON.parse(data);
-              //console.log(lastVideoJSON);
-              //console.log("Latest id: " + videoJSON.items[0].id.videoId);
-              //console.log("Last id: " + lastVideoJSON.users[j].video_id);
-              if (videoJSON.items[0].id.videoId != lastVideoJSON.users[j].video_id) {
-                if (videoJSON.items[0].snippet.channelTitle != lastVideoJSON.users[j].user) {
-                  console.log("Update username in records.");
-                  lastVideoJSON.users[j].user = videoJSON.items[0].snippet.channelTitle;
-                }
-                console.log("New video!")
-                url = videoJSON.items[0].id.videoId;
-                title = videoJSON.items[0].snippet.title;
-                //console.log("Latest video: " + title);
-                sendYoutube = JSON.stringify({
-                  content: youtubeJSON.users[i].message + " **" + title + "** http://youtu.be/" + url
-                });
-                youBotOptions = {
-                  hostname: 'discordapp.com',
-                  path: youtubeJSON.users[i].webhook_url,
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json'
-                  }
-                }
-                youBotReq = https.request(youBotOptions, youBotRes => {
-                  youBotRes.on('data', d => {
-                    process.stdout.write(d);
+  if (req.body.feed['at:deleted.entry'] !== undefined) {
+    console.log("Deleted video alert, ignore.");
+    console.log("Also outputting deleted entry value out of curiosity.");
+    console.log(req.body.feed['at:deleted.entry']);
+  } else {
+    console.log("Not a deleted video alert.");
+    //console.log("Entry: " + req.body.feed.entry);
+    //console.log("Channel ID: " + req.body.feed.entry['yt:channelId']);
+    userID = req.body.feed.entry['yt:channelId'];
+    //console.log("Video ID: " + req.body.feed.entry['yt:videoId']);
+    videoID = req.body.feed.entry['yt:videoId'];
+    videoTitle = he.decode(req.body.feed.entry.title);
+    //console.log("Timestamp: " + req.body.feed.entry.published);
+    yTTimestamp = req.body.feed.entry.published;
+    console.log("Checking for changes in youtubeusers.json");
+    newYoutubeJSONInput = fs.readFileSync("youtubeusers.json", "utf8");
+    if (newYoutubeJSONInput != youtubeJSON) {
+      console.log("youtubeusers.JSON has been modified. Loading new youtubeusers.JSON...");
+      youtubeJSON = newYoutubeJSONInput;
+      console.log("youtubeusers.JSON loaded.");
+    } else {
+      console.log("No changes detected.");
+    }
+    for (let i = 0; i < youtubeJSON.users.length; i++) {
+      console.log("Index: " + i + ", user: " + userID + ", compare to: " + youtubeJSON.users[i].id);
+      if (userID == youtubeJSON.users[i].id) {
+        console.log(userID + " is " + youtubeJSON.users[i].user);
+        console.log("Checking if user has a record.");
+        lastVideoJSON = JSON.parse(fs.readFileSync("lastvideo.json", "utf8"));
+        //console.log(lastVideoJSON);
+        for (let j = 0; j < lastVideoJSON.users.length; j++) {
+          console.log("Index: " + j + ", user: " + userID + ", compare to: " + lastVideoJSON.users[j].id);
+          if (lastVideoJSON.users[j].id == userID) {
+            console.log(youtubeJSON.users[i].user + " has a record, previous video ID: " + lastVideoJSON.users[j].video_id);
+            if (videoID != lastVideoJSON.users[j].video_id) {
+              console.log("New video ID does not match logged ID, comparing timestamps.");
+              var oldTime = new Date(lastVideoJSON.users[j].timestamp);
+              var newTime = new Date(yTTimestamp);
+              console.log("Old: " + oldTime + ", new: " + newTime);
+              ignoreTimeout = youtubeJSON.users[i].ignore_timeouts;
+              timeout = youtubeJSON.users[i].timeout;
+              var difference = newTime - oldTime;
+              console.log("ms difference: " + difference);
+              console.log(difference * 6e4 + " minutes have passed since the last alert was sent");
+              if (Math.sign(difference) != -1) {
+                if (!ignoreTimeout && difference < timeout * 6e4) {
+                  console.log("Not enough time has passed since the last alert and the user has a timeout set.");
+                } else if (ignoreTimeout || difference >= timeout * 6e4 || oldTime == "Invalid Date") {
+                  console.log("Enough time has passed since last alert or user has chosen to ignore timeouts");
+                  sendYoutube = JSON.stringify({
+                    content: youtubeJSON.users[i].message + "**" + videoTitle + "** https://youtu.be/" + videoID
                   });
+                  youBotOptions = {
+                    hostname: 'discordapp.com',
+                    path: youtubeJSON.users[i].webhook_url,
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json'
+                    }
+                  }
+                  youBotReq = https.request(youBotOptions, youBotRes => {
+                    youBotRes.on('data', d => {
+                      process.stdout.write(d);
+                    });
 
-                });
-                youBotReq.on('error', error => {
-                  console.error(error);
-                });
-                youBotReq.write(sendYoutube);
-                youBotReq.end();
-                //console.log(lastVideoJSON);
-                lastVideoJSON.users[j].video_id = url;
-                //console.log("Modified:");
-                //console.log(lastVideoJSON);
-                newLastVideoString = JSON.stringify(lastVideoJSON, null, 2);
-                fs.writeFileSync("lastvideo.json", newLastVideoString);
+                  });
+                  youBotReq.on('error', error => {
+                    console.error(error);
+                  });
+                  youBotReq.write(sendYoutube);
+                  youBotReq.end();
+                  console.log("Discord alert sent for " + youtubeJSON.users[i].user + "'s YouTube upload.");
+                  lastVideoJSON.users[j].video_id = videoID;
+                  lastVideoJSON.users[j].timestamp = yTTimestamp;
+                  newLastVideoString = JSON.stringify(lastVideoJSON, null, 2);
+                  fs.writeFileSync("lastvideo.json", newLastVideoString);
+                  res.status(200).end();
+                  break;
+                }
               } else {
-                console.log("Latest video hasn't changed since last notification.");
+                console.log("Negative difference, this alert is somehow older than the latest alert.");
+                res.status(200).end();
               }
+            }else{
+              console.log("Video ID hasn't changed.");
+              res.status(200).end();
+              break;
+            }
+          } else if (j == lastVideoJSON.users.length - 1 && lastVideoJSON.users[j].id != userID) {
+            console.log("User has no logs, generating logs from data.");
+            sendYoutube = JSON.stringify({
+              content: youtubeJSON.users[i].message + "**" + videoTitle + "** https://youtu.be/" + videoID
             });
-          });
-          youtubeReq.end();
-        }else if((j + 1) == lastVideoJSON.users.length){
-					console.log("User has no logs, generating logs from response.");
-					newYoutubeKey = youtubeKey.replace(/\\n/g, "\\n")
-            .replace(/\\'/g, "\\'")
-            .replace(/\\"/g, '\\"')
-            .replace(/\\&/g, "\\&")
-            .replace(/\\r/g, "\\r")
-            .replace(/\\t/g, "\\t")
-            .replace(/\\b/g, "\\b")
-            .replace(/\\f/g, "\\f");
-          var options = {
-            hostname: 'www.googleapis.com',
-            path: '/youtube/v3/search?part=snippet&channelId=' + userID + '&order=date&maxResults=1&key=' + newYoutubeKey,
-            method: 'GET'
+            youBotOptions = {
+              hostname: 'discordapp.com',
+              path: youtubeJSON.users[i].webhook_url,
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              }
+            }
+            youBotReq = https.request(youBotOptions, youBotRes => {
+              youBotRes.on('data', d => {
+                process.stdout.write(d);
+              });
+
+            });
+            youBotReq.on('error', error => {
+              console.error(error);
+            });
+            youBotReq.write(sendYoutube);
+            youBotReq.end();
+            console.log("Discord alert sent for " + youtubeJSON.users[i].user + "'s YouTube upload.");
+            lastVideoJSON.users.push({
+              user: youtubeJSON.users[i].user,
+              id: youtubeJSON.users[i].id,
+              video_id: videoID,
+              timestamp: yTTimestamp
+            });
+            newLastVideoString = JSON.stringify(lastVideoJSON, null, 2);
+            fs.writeFileSync("lastvideo.json", newLastVideoString);
+            res.status(200).end();
+            break;
           }
-          console.log(options.path + "testforspaces");
-          var youtubeReq = https.request(options, (youtubeRes) => {
-            let data = '';
-            youtubeRes.on('data', (d) => {
-              data += d;
-            });
-            youtubeRes.on('end', () => {
-              videoJSON = JSON.parse(data);
-              //console.log(lastVideoJSON);
-              //console.log("Latest id: " + videoJSON.items[0].id.videoId);
-              //console.log("Last id: " + lastVideoJSON.users[j].video_id);
-
-
-
-                console.log("New video!")
-                url = videoJSON.items[0].id.videoId;
-                title = videoJSON.items[0].snippet.title;
-                //console.log("Latest video: " + title);
-                sendYoutube = JSON.stringify({
-                  content: youtubeJSON.users[i].message + " **" + title + "** http://youtu.be/" + url
-                });
-                youBotOptions = {
-                  hostname: 'discordapp.com',
-                  path: youtubeJSON.users[i].webhook_url,
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json'
-                  }
-                }
-                youBotReq = https.request(youBotOptions, youBotRes => {
-                  youBotRes.on('data', d => {
-                    process.stdout.write(d);
-                  });
-
-                });
-                youBotReq.on('error', error => {
-                  console.error(error);
-                });
-                youBotReq.write(sendYoutube);
-                youBotReq.end();
-                //console.log(lastVideoJSON);
-								lastVideoJSON.users.push({
-									user: videoJSON.items[0].snippet.channelTitle,
-									id: youtubeJSON.users[i].id,
-									video_id: url
-								});
-                //console.log("Modified:");
-                //console.log(lastVideoJSON);
-                newLastVideoString = JSON.stringify(lastVideoJSON, null, 2);
-                fs.writeFileSync("lastvideo.json", newLastVideoString);
-
-            });
-          });
-          youtubeReq.end();
-				}
+        }
+      } else if (i == youtubeJSON.users.length - 1 && youtubeJSON.users[i].id != userID) {
+        console.log("End of logs.");
+        res.status(403).end();
       }
     }
   }
-//console.log(req.body);
-res.status(200).send();
-}
-);
+});
 
 //POST webhook route
 router.post('/api', (req, res) => {
@@ -635,6 +616,7 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
       });
       botReq.write(data);
       botReq.end();
+      console.log("Discord alert sent for " + userName);
       //console.log("Outputting JSON");
       //console.log(lastStreamJSON);
       //console.log("Modifying JSON...");
