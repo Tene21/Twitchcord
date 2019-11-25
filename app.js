@@ -226,6 +226,7 @@ router.get('/api/yt', (req, res) => {
 //will likely only grab one video from any potential bulk upload.
 //POST youtube route
 router.post('/api/yt', (req, res) => {
+  var hasLog = false;
   console.log(req.body);
   console.log(JSON.stringify(req.headers));
   if (req.body.feed['at:deleted.entry'] !== undefined) {
@@ -242,15 +243,7 @@ router.post('/api/yt', (req, res) => {
     videoTitle = he.decode(req.body.feed.entry.title);
     //console.log("Timestamp: " + req.body.feed.entry.published);
     yTTimestamp = req.body.feed.entry.published;
-    console.log("Checking for changes in youtubeusers.json");
-    newYoutubeJSONInput = fs.readFileSync("youtubeusers.json", "utf8");
-    if (newYoutubeJSONInput != youtubeJSON) {
-      console.log("youtubeusers.JSON has been modified. Loading new youtubeusers.JSON...");
-      youtubeJSON = newYoutubeJSONInput;
-      console.log("youtubeusers.JSON loaded.");
-    } else {
-      console.log("No changes detected.");
-    }
+    youtubeJSON = JSON.parse(fs.readFileSync("youtubeusers.json", "utf8"));
     for (let i = 0; i < youtubeJSON.users.length; i++) {
       console.log("Index: " + i + ", user: " + userID + ", compare to: " + youtubeJSON.users[i].id);
       if (userID == youtubeJSON.users[i].id) {
@@ -305,18 +298,22 @@ router.post('/api/yt', (req, res) => {
                   newLastVideoString = JSON.stringify(lastVideoJSON, null, 2);
                   fs.writeFileSync("lastvideo.json", newLastVideoString);
                   res.status(200).end();
+                  hasLog = true;
                   break;
                 }
               } else {
                 console.log("Negative difference, this alert is somehow older than the latest alert.");
                 res.status(200).end();
+                hasLog = true;
+                break;
               }
             }else{
               console.log("Video ID hasn't changed.");
               res.status(200).end();
+              hasLog = true;
               break;
             }
-          } else if (j == lastVideoJSON.users.length - 1 && lastVideoJSON.users[j].id != userID) {
+          } else if (j == lastVideoJSON.users.length - 1 && lastVideoJSON.users[j].id != userID && !hasLog) {
             console.log("User has no logs, generating logs from data.");
             sendYoutube = JSON.stringify({
               content: youtubeJSON.users[i].message + "**" + videoTitle + "** https://youtu.be/" + videoID
