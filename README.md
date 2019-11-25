@@ -5,6 +5,8 @@ Originally developed to replace IFTTT as Twitch streamer Limealicious' live aler
 
 Relies on local JSON files storing essential data regarding target streams, in the following format:
 
+##Twitch
+
 ### User data
 
 ```JSON
@@ -40,3 +42,34 @@ The server also stores data regarding the previous stream of each user in a simi
 ## Serving webpages
 
 The server is capable of serving HTML pages, and will attempt to serve index.html upon receiving a GET request at a root path, otherwise it will serve a generic page warning that no HTML was provided.
+
+## YouTube
+Can now provide Discord alerts for YouTube uploads. Relies on JSON similar to the Twitch functionality:
+
+### User data
+
+```JSON
+{
+	"users": [{
+		"user": "ExampleUser",
+		"id": "The channel ID of the user",
+		"message": "The message to be displayed when the user uploads a video. Should always be followed by either a trailing space or a line break.",
+		"webhook_url": "The path to the Discord webhook endpoint, starting with /api/webhooks/...",
+		"ignore_timeouts": "A boolean showing whether or not the user allows bulk alerts for bulk uploads",
+		"timeout": "A numeric value representing the number of minutes to wait between upload alerts if ignore_timeouts is set to false."
+		}]
+}
+```
+### Latest video
+
+```JSON
+{
+  "users": [
+    {
+      "user": "ExampleUser",
+      "id": "The channel ID of the user",
+      "video_id": "The ID of the user's latest upload",
+      "timestamp": "The upload time of the latest video, in ISO8601 format: YYYY-MM-DDTHH:MM:SSZ"
+    }]
+}
+```
