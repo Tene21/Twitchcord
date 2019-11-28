@@ -34,7 +34,8 @@ The server also stores data regarding the previous stream of each user in a simi
 		"user_name": "ExampleUser",
 		"timestamp": "The start time of the latest stream, in ISO8601 format: YYYY-MM-DDTHH:MM:SSZ",
 		"game": "The game being played as of the latest alert",
-		"game_changed_count": "The number of times the game has been changed in one stream"
+		"game_changed_count": "The number of times the game has been changed in one stream",
+		"status": "The status of the user, as either 'live' or 'offline'"
 	}]
 }
 ```

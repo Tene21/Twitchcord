@@ -41,23 +41,24 @@ var usersJSON = JSON.parse(usersJSONInput);
 
 //automatically refresh topic subscriptions every day at midnight
 var j = schedule.scheduleJob('0 0 * * *', function() {
+  console.log("Refreshing subscriptions...");
   console.log("Checking for changes in users.JSON...");
   newUsersJSONInput = fs.readFileSync("users.json", "utf8");
   if (newUsersJSONInput != usersJSONInput) {
     console.log("users.JSON has been modified. Loading new users.JSON...");
     usersJSONInput = newUsersJSONInput;
-    usersJSON = newUsersJSONInput;
+    usersJSON = JSON.parse(newUsersJSONInput);
     console.log("users.JSON loaded.");
   } else {
     console.log("No changes detected.");
   }
-  console.log("usersJSON:");
-  console.log(usersJSON);
+  //console.log("usersJSON:");
+  //console.log(usersJSON);
   for (let i = 0; i < usersJSON.users.length; i++) {
     let currentUser = usersJSON.users[i].user_name;
     console.log("Refreshing subscription for " + currentUser + "...");
-    if (usersJSON.users[i].user_id == "test_id") {
-      console.log("Test user doesn't need refreshed.");
+    if (usersJSON.users[i].user_id == "duplicate_user") {
+      console.log("Duplicate user doesn't need refreshed.");
       continue;
     }
     var userID = usersJSON.users[i].user_id;
@@ -96,15 +97,15 @@ var j = schedule.scheduleJob('0 0 * * *', function() {
   }
   console.log("Checking for changes in youtubeusers.json");
   newYoutubeJSONInput = fs.readFileSync("youtubeusers.json", "utf8");
-  if (newYoutubeJSONInput != youtubeJSON) {
+  if (newYoutubeJSONInput != youtubeJSONInput) {
     console.log("youtubeusers.JSON has been modified. Loading new youtubeusers.JSON...");
-    youtubeJSON = newYoutubeJSONInput;
+    youtubeJSONInput = newYoutubeJSONInput;
     console.log("youtubeusers.JSON loaded.");
   } else {
     console.log("No changes detected.");
   }
   //console.log("youtubeJSON parsed:");
-  youtubeJSON = JSON.parse(youtubeJSON);
+  youtubeJSON = JSON.parse(youtubeJSONInput);
   //console.log(youtubeJSON);
   for (let i = 0; i < youtubeJSON.users.length; i++) {
     let currentUser = youtubeJSON.users[i].user;
@@ -116,6 +117,7 @@ var j = schedule.scheduleJob('0 0 * * *', function() {
     refreshBody.append("hub.mode", "subscribe");
     refreshBody.append("hub.topic", "https://www.youtube.com/xml/feeds/videos.xml?channel_id=" + userID);
     refreshBody.append("hub.lease_seconds", 86405);
+    refreshBody.append("hub.secret", clientSecret);
     var refreshHeaders = refreshBody.getHeaders();
     //console.log("YT Refresh body:");
     //console.log(refreshBody);
@@ -149,7 +151,7 @@ app.use(bodyParser.xml({
 app.use(bodyParser.raw());
 
 router.use(function(req, res, next) {
-  console.log("/" + req.method + " from " + req.ip + " to " + req.originalUrl);
+  //console.log("/" + req.method + " to " + req.originalUrl + " at " + Date(Date.now()).toString());
   next();
 });
 
@@ -184,12 +186,12 @@ router.get('/start', (req, res) => {
 
 //GET webhook route
 router.get('/api', (req, res) => {
-  console.log(JSON.stringify(req.headers));
-  console.log("GET request received at " + Date(Date.now()).toString());
+  //console.log(JSON.stringify(req.headers));
+  //console.log("GET request received at " + Date(Date.now()).toString());
   //console.log(Object.keys(req.query));
   for (var i = 0; i < Object.keys(req.query).length; i++) {
     if (Object.keys(req.query)[i] == 'hub.challenge') {
-      console.log("hub.challenge exists");
+      //console.log("hub.challenge exists");
       res.send(req.query['hub.challenge']);
       break;
     }
@@ -203,12 +205,12 @@ router.get('/api', (req, res) => {
 });
 
 router.get('/api/yt', (req, res) => {
-  console.log(JSON.stringify(req.headers));
-  console.log("GET request received at " + Date(Date.now()).toString());
+  //console.log("GET request received at " + Date(Date.now()).toString());
   //console.log(Object.keys(req.query));
   for (var i = 0; i < Object.keys(req.query).length; i++) {
     if (Object.keys(req.query)[i] == 'hub.challenge') {
-      console.log("hub.challenge exists");
+      //console.log("hub.challenge exists");
+
       res.send(req.query['hub.challenge']);
       break;
     }
@@ -229,12 +231,19 @@ router.post('/api/yt', (req, res) => {
   var hasLog = false;
   //console.log(req.body);
   //console.log(JSON.stringify(req.headers));
-  if (req.body.feed['at:deleted.entry'] !== undefined) {
+  /*if (!req.isXHub && req.headers.secret != clientSecret) {
+    console.log("No XHub signature");
+    res.status(403);
+    res.send();
+  } else if (req.headers.secret == clientSecret || req.isXHubValid()) {
+    console.log("Valid XHub signature.");*/
+  if (req.body.feed['at:deleted.entry'] != undefined) {
     console.log("Deleted video alert, ignore.");
     console.log("Also outputting deleted entry value out of curiosity.");
-    console.log(req.body.feed['at:deleted.entry']);
-  } else {
-    console.log("Not a deleted video alert.");
+    console.log(JSON.stringify(req.body.feed['at:deleted.entry']));
+  } else if(req.body.feed.title == "YouTube video feed"){
+    //console.log("Not a deleted video alert.");
+    console.log("Alert from user " + req.body.feed.entry.author.name);
     //console.log("Entry: " + req.body.feed.entry);
     //console.log("Channel ID: " + req.body.feed.entry['yt:channelId']);
     userID = req.body.feed.entry['yt:channelId'];
@@ -244,10 +253,17 @@ router.post('/api/yt', (req, res) => {
     //console.log("Timestamp: " + req.body.feed.entry.published);
     yTTimestamp = req.body.feed.entry.published;
     youtubeJSON = JSON.parse(fs.readFileSync("youtubeusers.json", "utf8"));
+    console.log("Checking if " + req.body.feed.entry.author.name + " is in youtubeuser.json");
     for (let i = 0; i < youtubeJSON.users.length; i++) {
       //console.log("Index: " + i + ", user: " + userID + ", compare to: " + youtubeJSON.users[i].id);
       if (userID == youtubeJSON.users[i].id) {
-        console.log(userID + " is " + youtubeJSON.users[i].user);
+        console.log(req.body.feed.entry.author.name + " is in youtubeusers.json as " + youtubeJSON.users[i].user);
+        if(req.body.feed.entry.author.name != youtubeJSON.users[i].user){
+          console.log("Alert username and youtubeusers.json username do not match, updating...");
+          youtubeJSON.users[i].user = req.body.feed.entry.author.name;
+          newYoutubeString = JSON.stringify(youtubeJSON, null, 2);
+          fs.writeFileSync("youtubeusers.json", newYoutubeString);
+        }
         console.log("Checking if " + youtubeJSON.users[i].user + " has a record.");
         lastVideoJSON = JSON.parse(fs.readFileSync("lastvideo.json", "utf8"));
         //console.log(lastVideoJSON);
@@ -263,8 +279,8 @@ router.post('/api/yt', (req, res) => {
               ignoreTimeout = youtubeJSON.users[i].ignore_timeouts;
               timeout = youtubeJSON.users[i].timeout;
               var difference = newTime - oldTime;
-              //console.log("ms difference: " + difference);
-              console.log(difference * 6e4 + " minutes have passed since the last alert was sent");
+              console.log("ms difference: " + difference);
+              console.log(difference / 6e4 + " minutes have passed since the last alert was sent");
               if (Math.sign(difference) != -1) {
                 if (!ignoreTimeout && difference < timeout * 6e4) {
                   console.log("Not enough time has passed since the last alert and the user has a timeout set.");
@@ -351,11 +367,16 @@ router.post('/api/yt', (req, res) => {
           }
         }
       } else if (i == youtubeJSON.users.length - 1 && youtubeJSON.users[i].id != userID) {
-        console.log("End of logs.");
+        console.log("User not in youtubeusers.json");
         res.status(403).end();
       }
     }
+  }else{
+    console.log("Weird alert, not a video or a deletion. Outputting request body.");
+    console.log(JSON.stringify(req.body));
+    res.status(403).end();
   }
+//}
 });
 
 //POST webhook route
@@ -457,7 +478,7 @@ router.post('/api', (req, res) => {
           if (lastStream.users !== undefined && lastStream.users.length > 0) {
             console.log("Logs exist");
             for (var j = 0; j < lastStream.users.length; j++) {
-              console.log("Checking logs in index " + j);
+              //console.log("Checking logs in index " + j);
               if (user_name == lastStream.users[j].user_name) {
                 console.log("User " + user_name + " has a log, comparing...");
                 currentIndex = j;
@@ -465,6 +486,12 @@ router.post('/api', (req, res) => {
                 lastGame = lastStream.users[j].game;
                 lastStreamTimestamp = lastStream.users[j].timestamp;
                 isNewUser = false;
+                switch (lastStream.users[j].status){
+                  case "live":
+                    isOffline = false;
+                  case "offline":
+                    isOffline = true;
+                }
                 break;
               }
               //console.log("Current index: " + j + " and length: " + lastStream.users.length);
@@ -480,18 +507,21 @@ router.post('/api', (req, res) => {
           var oldDate = new Date(lastStreamTimestamp);
           var newDate = new Date(start_time);
           var streamDiff = newDate - oldDate;
-          if (streamDiff > 8 * 36e5) {
-            console.log("More than 8 hours since last stream, new stream");
+          if ((streamDiff > 8 * 36e5 || isNewUser)  && isOffline ) {
+            console.log("New stream");
             sendToBot(user_name, gameName, title, longDate, "new stream", date, start_time.toLocaleString('default', {
               hour: '2-digit'
             }), lastStream, currentIndex, startTime, isNewUser);
+            res.status(200).send();
           } else if (lastGame != gameName) {
-            console.log("Less than 8 hours since last stream but game has changed");
+            console.log("New game");
             sendToBot(user_name, gameName, title, longDate, "new game", date, start_time.toLocaleString('default', {
               hour: '2-digit'
             }), lastStream, currentIndex, startTime, isNewUser);
+            res.status(200).send();
           } else {
-            console.log("<8 hours since last stream, game has not changed");
+            console.log("Old stream");
+            res.status(200).send();
           }
         });
       });
@@ -502,8 +532,27 @@ router.post('/api', (req, res) => {
       //EVERYTHING SHOULD WORK HERE, TEST DISCORD WEBHOOK POST NEXT
     } else {
       console.log("Empty array, stream is offline.");
+      //console.log(JSON.stringify(req.headers));
+      offlineID = req.headers.link.split("=")[2].split(">")[0];
+      usersJSON = JSON.parse(fs.readFileSync("users.json", "utf8"));
+      for (var i = 0; i < usersJSON.users.length; i++) {
+        if (usersJSON.users[i].user_id == offlineID) {
+          offlineUserName = usersJSON.users[i].user_name;
+          console.log(offlineUserName + " is offline, setting status...");
+          offlineJSON = JSON.parse(fs.readFileSync("laststream.json", "utf8"));
+          for(var j = 0; j < offlineJSON.users.length; j++){
+            if(offlineJSON.users[j].user_name == offlineUserName){
+              currentTimestamp = new Date(Date.now());
+              offlineJSON.users[j].status = "offline";
+              offlineJSON.users[j].timestamp = req.headers['twitch-notification-timestamp'];
+              offlineString = JSON.stringify(offlineJSON, null, 2);
+              fs.writeFileSync("laststream.json", offlineString);
+            }
+          }
+        }
+      }
     }
-    res.send(req.body);
+    //res.send(req.body);
   } else {
     console.log("Nice try, but your signature is invalid.");
     res.status(403).send();
@@ -621,6 +670,7 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
         lastStreamParsed.users[jsonIndex].game = gameName;
         lastStreamParsed.users[jsonIndex].timestamp = fullTimeStamp;
         lastStreamParsed.users[jsonIndex].game_changed_count = gameChangedCount;
+        lastStreamParsed.users[jsonIndex].status = "live";
         newLastStreamString = JSON.stringify(lastStreamParsed, null, 2);
         //console.log(newLastStreamString);
         fs.writeFileSync("laststream.json", newLastStreamString);
@@ -629,7 +679,8 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
           user_name: userName,
           timestamp: fullTimeStamp,
           game: gameName,
-          game_changed_count: 0
+          game_changed_count: 0,
+          status: "live"
         })
         newLastStreamString = JSON.stringify(lastStreamParsed, null, 2);
         //console.log(newLastStreamString);
