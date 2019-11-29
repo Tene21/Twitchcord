@@ -542,12 +542,22 @@ router.post('/api', (req, res) => {
           offlineJSON = JSON.parse(fs.readFileSync("laststream.json", "utf8"));
           for(var j = 0; j < offlineJSON.users.length; j++){
             if(offlineJSON.users[j].user_name == offlineUserName){
-              currentTimestamp = new Date(Date.now());
-              offlineJSON.users[j].status = "offline";
-              offlineJSON.users[j].timestamp = req.headers['twitch-notification-timestamp'];
-              offlineString = JSON.stringify(offlineJSON, null, 2);
-              fs.writeFileSync("laststream.json", offlineString);
-              res.status(200).send();
+              if(offlineJSON.users[j].status == "offline"){
+                console.log(offlineUserName + " is already marked as offline.");
+                res.status(200).send();
+                break;
+              }else{
+                oldTimestamp = new Date(offlineJSON.users[j].timestamp);
+                currentTimestamp = new Date(req.headers['twitch-notification-timestamp']);
+                timeDiff = currentTimestamp - oldTimestamp;
+                timeDiffH = (timeDiff / 36e5).toFixed(2);
+                console.log(offlineUserName + " was live for " + timeDiffH + " hours");
+                offlineJSON.users[j].status = "offline";
+                offlineJSON.users[j].timestamp = req.headers['twitch-notification-timestamp'];
+                offlineString = JSON.stringify(offlineJSON, null, 2);
+                fs.writeFileSync("laststream.json", offlineString);
+                res.status(200).send();
+              }
             }
           }
         }
