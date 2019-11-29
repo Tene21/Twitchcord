@@ -391,7 +391,7 @@ router.post('/api', (req, res) => {
     res.status(403);
     res.send();
   } else if (req.headers.secret == clientSecret || req.isXHubValid()) {
-    console.log("Valid XHub signature");
+    //console.log("Valid XHub signature");
     var stringified = JSON.stringify(req.body);
     //in case any characters need escaped
     stringified = stringified.replace(/\\n/g, "\\n")
@@ -531,7 +531,7 @@ router.post('/api', (req, res) => {
       gameReq.end();
       //EVERYTHING SHOULD WORK HERE, TEST DISCORD WEBHOOK POST NEXT
     } else {
-      console.log("Empty array, stream is offline.");
+      //console.log("Empty array, stream is offline.");
       //console.log(JSON.stringify(req.headers));
       offlineID = req.headers.link.split("=")[2].split(">")[0];
       usersJSON = JSON.parse(fs.readFileSync("users.json", "utf8"));
