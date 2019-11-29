@@ -507,7 +507,7 @@ router.post('/api', (req, res) => {
           var oldDate = new Date(lastStreamTimestamp);
           var newDate = new Date(start_time);
           var streamDiff = newDate - oldDate;
-          if ((streamDiff > 8 * 36e5 || isNewUser)  && isOffline ) {
+          if ((streamDiff > 3 * 36e5 || isNewUser)  && isOffline ) {
             console.log("New stream");
             sendToBot(user_name, gameName, title, longDate, "new stream", date, start_time.toLocaleString('default', {
               hour: '2-digit'
