@@ -237,10 +237,10 @@ router.post('/api/yt', (req, res) => {
     res.send();
   } else if (req.headers.secret == clientSecret || req.isXHubValid()) {
     console.log("Valid XHub signature.");*/
-  if (req.body.feed['at:deleted.entry'] != undefined) {
+  if (req.body.feed['at:deleted-entry'] != undefined) {
     console.log("Deleted video alert, ignore.");
     console.log("Also outputting deleted entry value out of curiosity.");
-    console.log(JSON.stringify(req.body.feed['at:deleted.entry']));
+    console.log(JSON.stringify(req.body.feed['at:deleted-entry']));
   } else if(req.body.feed.title == "YouTube video feed"){
     //console.log("Not a deleted video alert.");
     console.log("Alert from user " + req.body.feed.entry.author.name);
