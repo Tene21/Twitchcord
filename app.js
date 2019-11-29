@@ -547,6 +547,7 @@ router.post('/api', (req, res) => {
               offlineJSON.users[j].timestamp = req.headers['twitch-notification-timestamp'];
               offlineString = JSON.stringify(offlineJSON, null, 2);
               fs.writeFileSync("laststream.json", offlineString);
+              res.status(200).send();
             }
           }
         }
