@@ -143,11 +143,14 @@ app.use(xhub({
   secret: clientSecret
 }));
 app.use(bodyParser.json());
+app.use(bodyParser.text({type: 'application/atom+xml'}));
+/*
 app.use(bodyParser.xml({
   xmlParseOptions: {
     explicitArray: false
   }
 }));
+*/
 app.use(bodyParser.raw());
 
 router.use(function(req, res, next) {
@@ -224,12 +227,14 @@ router.get('/api/yt', (req, res) => {
   res.status(200);
 });
 
-//TODO: fix everything about this, it's an incredibly hacky workaround because i can't seem to get the actual notification data from the POST, so i just grab the user ID from the headers and make a manual request from there.
-//will likely only grab one video from any potential bulk upload.
+
 //POST youtube route
 router.post('/api/yt', (req, res) => {
   var hasLog = false;
-  //console.log(req.body);
+  req.accepts('application/atom+xml')
+  console.log("POST request received at " + Date(Date.now()).toString());
+  console.log(req.body);
+  res.status(200);
   //console.log(JSON.stringify(req.headers));
   /*if (!req.isXHub && req.headers.secret != clientSecret) {
     console.log("No XHub signature");
@@ -237,6 +242,7 @@ router.post('/api/yt', (req, res) => {
     res.send();
   } else if (req.headers.secret == clientSecret || req.isXHubValid()) {
     console.log("Valid XHub signature.");*/
+    /*
   if (req.body.feed['at:deleted-entry'] != undefined) {
     console.log("Deleted video alert, ignore.");
     console.log("Also outputting deleted entry value out of curiosity.");
@@ -376,6 +382,7 @@ router.post('/api/yt', (req, res) => {
     console.log(JSON.stringify(req.body));
     res.status(403).end();
   }
+  */
 //}
 });
 
@@ -480,7 +487,7 @@ router.post('/api', (req, res) => {
             for (var j = 0; j < lastStream.users.length; j++) {
               //console.log("Checking logs in index " + j);
               if (user_name == lastStream.users[j].user_name) {
-                console.log("User " + user_name + " has a log, comparing...");
+                console.log(user_name + " has a log, comparing...");
                 currentIndex = j;
                 //console.log(currentIndex);
                 lastGame = lastStream.users[j].game;
@@ -496,10 +503,11 @@ router.post('/api', (req, res) => {
               }
               //console.log("Current index: " + j + " and length: " + lastStream.users.length);
               if (j == (lastStream.users.length - 1) && user_name != lastStream.users[j].user_name) {
-                console.log("User " + user_name + " does not have a log.");
+                console.log(user_name + " does not have a log.");
                 lastGame = "";
                 lastStreamTimestamp = "";
                 isNewUser = true;
+                isOffline = true;
               }
             }
           }
@@ -520,7 +528,10 @@ router.post('/api', (req, res) => {
             }), lastStream, currentIndex, startTime, isNewUser);
             res.status(200).send();
           } else {
-            console.log("Old stream");
+            if(!isOffline){
+              console.log(user_name + " is still online.");
+            }
+            console.log("Ignoring alert.");
             res.status(200).send();
           }
         });
@@ -620,7 +631,11 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
           gameChangedCount = lastStreamParsed.users[jsonIndex].game_changed_count;
           gameChangedCount++;
           console.log(userName + " has changed games " + gameChangedCount + " times this stream.");
-          message = usersJSON.users[i].game_message;
+          if(userName == "Kiwo"){
+            message = usersJSON.users[i].game_message + " - " + gameName;
+          }else{
+            message = usersJSON.users[i].game_message;
+          }
           thumbnailURL = thumbnailURL + "&newgame" + gameChangedCount;
         }
       } else {
@@ -692,7 +707,7 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
           game: gameName,
           game_changed_count: 0,
           status: "live"
-        })
+        });
         newLastStreamString = JSON.stringify(lastStreamParsed, null, 2);
         //console.log(newLastStreamString);
         fs.writeFileSync("laststream.json", newLastStreamString);
