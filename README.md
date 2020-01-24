@@ -56,9 +56,7 @@ Can now provide Discord alerts for YouTube uploads. Relies on JSON similar to th
 		"user": "ExampleUser",
 		"id": "The channel ID of the user",
 		"message": "The message to be displayed when the user uploads a video. Should always be followed by either a trailing space or a line break.",
-		"webhook_url": "The path to the Discord webhook endpoint, starting with /api/webhooks/...",
-		"ignore_timeouts": "A boolean showing whether or not the user allows bulk alerts for bulk uploads",
-		"timeout": "A numeric value representing the number of minutes to wait between upload alerts if ignore_timeouts is set to false."
+		"webhook_url": "The path to the Discord webhook endpoint, starting with /api/webhooks/..."
 		}]
 }
 ```
@@ -70,8 +68,7 @@ Can now provide Discord alerts for YouTube uploads. Relies on JSON similar to th
     {
       "user": "ExampleUser",
       "id": "The channel ID of the user",
-      "video_id": "The ID of the user's latest upload",
-      "timestamp": "The upload time of the latest video, in ISO8601 format: YYYY-MM-DDTHH:MM:SSZ"
+      "video_id": "The ID of the user's latest upload"
     }]
 }
 ```
