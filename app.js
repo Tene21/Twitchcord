@@ -41,7 +41,7 @@ var usersJSON = JSON.parse(usersJSONInput);
 
 //automatically refresh topic subscriptions every day at midnight
 var j = schedule.scheduleJob('0 0 * * *', function() {
-  console.log("Refreshing subscriptions...");
+  console.log("Refreshing Twitch subscriptions...");
   console.log("Checking for changes in users.JSON...");
   newUsersJSONInput = fs.readFileSync("users.json", "utf8");
   if (newUsersJSONInput != usersJSONInput) {
@@ -56,7 +56,7 @@ var j = schedule.scheduleJob('0 0 * * *', function() {
   //console.log(usersJSON);
   for (let i = 0; i < usersJSON.users.length; i++) {
     let currentUser = usersJSON.users[i].user_name;
-    console.log("Refreshing subscription for " + currentUser + "...");
+    console.log("Refreshing Twitch subscription for " + currentUser + "...");
     if (usersJSON.users[i].user_id == "duplicate_user") {
       console.log("Duplicate user doesn't need refreshed.");
       continue;
@@ -86,7 +86,7 @@ var j = schedule.scheduleJob('0 0 * * *', function() {
         process.stdout.write(d)
       });
       refreshRes.on('end', function() {
-        console.log("Subscription for " + currentUser + " refreshed.");
+        console.log("Twitch subscription for " + currentUser + " refreshed.");
       })
       refreshReq.on('error', error => {
         console.error(error)
