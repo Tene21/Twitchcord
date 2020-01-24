@@ -409,128 +409,287 @@ router.post('/api', (req, res) => {
       var gameName;
       var game_id = json.data[0].game_id;
       //console.log("Game ID: " + game_id);
-      var options = {
-        hostname: 'api.twitch.tv',
-        path: '/helix/games?id=' + game_id,
-        method: 'GET',
-        headers: gameHeaders
-      }
-      //console.log(options);
-      var gameReq = https.request(options, (gameRes) => {
-        let data = '';
-        gameRes.on('data', (d) => {
-          data += d;
+      if (game_id == "") {
+        gameName = null;
+        var user_name = json.data[0].user_name;
+        var title = json.data[0].title;
+        var start_time = new Date(json.data[0].started_at /*+ " +0100"*/ );
+        var startTime = json.data[0].started_at;
+        //console.log(start_time);
+        //console.log(startTime);
+        var time_now = new Date(Date.now());
+        var user_count = json.data[0].viewer_count;
+        var hours = start_time.toLocaleString('default', {
+          hour: 'numeric'
         });
-        gameRes.on('end', () => {
-          gameJSON = JSON.parse(data);
-          //console.log(gameJSON);
-          gameName = gameJSON.data[0].name;
-          //console.log("Game: " + gameName);
-          var user_name = json.data[0].user_name;
-          var title = json.data[0].title;
-          var start_time = new Date(json.data[0].started_at /*+ " +0100"*/ );
-          var startTime = json.data[0].started_at;
-          //console.log(start_time);
-          //console.log(startTime);
-          var time_now = new Date(Date.now());
-          var user_count = json.data[0].viewer_count;
-          var hours = start_time.toLocaleString('default', {
-            hour: 'numeric'
-          });
-          var minutes = start_time.toLocaleString('default', {
-            minute: '2-digit'
-          });
-          var ampm = hours >= 12 ? 'PM' : 'AM';
-          if (hours != 12) {
-            hours = hours % 12;
-          }
-          hours = hours < 10 ? '0' + hours : hours;
-          minutes = minutes < 10 ? '0' + minutes : minutes;
-          var strTime = hours + ':' + minutes + ampm;
-          var date = start_time.toLocaleString('default', {
-            month: 'long',
-            timeZone: 'UTC'
-          }) + " " + start_time.toLocaleString('default', {
-            day: '2-digit'
-          }) + ", " + start_time.toLocaleString('default', {
-            year: 'numeric'
-          });
-          var longDate = start_time.toLocaleString('default', {
-            month: 'long',
-            timeZone: 'UTC'
-          }) + " " + start_time.toLocaleString('default', {
-            day: '2-digit'
-          }) + ", " + start_time.toLocaleString('default', {
-            year: 'numeric'
-          }) + " at " + strTime;
-          if (fs.existsSync("laststream.json")) {
-            lastStreamJSON = fs.readFileSync("laststream.json", "utf8");
-            //console.log(lastStreamJSON);
-          } else {
-            fs.writeFileSync("laststream.json");
-          }
-          var lastGame;
-          var lastStreamTimestamp;
-          var lastStream = JSON.parse(lastStreamJSON);
-          var isNewUser;
-          if (lastStream.users !== undefined && lastStream.users.length > 0) {
-            console.log("Logs exist");
-            for (var j = 0; j < lastStream.users.length; j++) {
-              //console.log("Checking logs in index " + j);
-              if (user_name == lastStream.users[j].user_name) {
-                console.log(user_name + " has a log, comparing...");
-                currentIndex = j;
-                //console.log(currentIndex);
-                lastGame = lastStream.users[j].game;
-                lastStreamTimestamp = lastStream.users[j].timestamp;
-                isNewUser = false;
-                switch (lastStream.users[j].status){
-                  case "live":
-                    isOffline = false;
-                  case "offline":
-                    isOffline = true;
-                }
-                break;
-              }
-              //console.log("Current index: " + j + " and length: " + lastStream.users.length);
-              if (j == (lastStream.users.length - 1) && user_name != lastStream.users[j].user_name) {
-                console.log(user_name + " does not have a log.");
-                lastGame = "";
-                lastStreamTimestamp = "";
-                isNewUser = true;
+        var minutes = start_time.toLocaleString('default', {
+          minute: '2-digit'
+        });
+        var ampm = hours >= 12 ? 'PM' : 'AM';
+        if (hours != 12) {
+          hours = hours % 12;
+        }
+        hours = hours < 10 ? '0' + hours : hours;
+        minutes = minutes < 10 ? '0' + minutes : minutes;
+        var strTime = hours + ':' + minutes + ampm;
+        var date = start_time.toLocaleString('default', {
+          month: 'long',
+          timeZone: 'UTC'
+        }) + " " + start_time.toLocaleString('default', {
+          day: '2-digit'
+        }) + ", " + start_time.toLocaleString('default', {
+          year: 'numeric'
+        });
+        var longDate = start_time.toLocaleString('default', {
+          month: 'long',
+          timeZone: 'UTC'
+        }) + " " + start_time.toLocaleString('default', {
+          day: '2-digit'
+        }) + ", " + start_time.toLocaleString('default', {
+          year: 'numeric'
+        }) + " at " + strTime;
+        if (fs.existsSync("laststream.json")) {
+          lastStreamJSON = fs.readFileSync("laststream.json", "utf8");
+          //console.log(lastStreamJSON);
+        } else {
+          fs.writeFileSync("laststream.json");
+        }
+        var lastGame;
+        var lastStreamTimestamp;
+        var lastStream = JSON.parse(lastStreamJSON);
+        var isNewUser;
+        if (lastStream.users !== undefined && lastStream.users.length > 0) {
+          console.log("Logs exist");
+          for (var j = 0; j < lastStream.users.length; j++) {
+            //console.log("Checking logs in index " + j);
+            if (user_name == lastStream.users[j].user_name) {
+              console.log(user_name + " has a log, comparing...");
+              currentIndex = j;
+              //console.log(currentIndex);
+              lastGame = lastStream.users[j].game;
+              lastStreamTimestamp = lastStream.users[j].timestamp;
+              isNewUser = false;
+              if(lastStream.users[j].status == "live"){
+                isOffline = false;
+              }else if (lastStream.users[j].status == "offline"){
                 isOffline = true;
               }
+              break;
+            }
+            //console.log("Current index: " + j + " and length: " + lastStream.users.length);
+            if (j == (lastStream.users.length - 1) && user_name != lastStream.users[j].user_name) {
+              console.log(user_name + " does not have a log.");
+              lastGame = "";
+              lastStreamTimestamp = "";
+              isNewUser = true;
+              isOffline = true;
             }
           }
-          //console.log("Current index: " + currentIndex);
-          var oldDate = new Date(lastStreamTimestamp);
-          var newDate = new Date(start_time);
-          var streamDiff = newDate - oldDate;
-          if ((streamDiff > 3 * 36e5 || isNewUser)  && isOffline ) {
-            console.log("New stream");
-            sendToBot(user_name, gameName, title, longDate, "new stream", date, start_time.toLocaleString('default', {
-              hour: '2-digit'
-            }), lastStream, currentIndex, startTime, isNewUser);
-            res.status(200).send();
-          } else if (lastGame != gameName) {
-            console.log("New game");
-            sendToBot(user_name, gameName, title, longDate, "new game", date, start_time.toLocaleString('default', {
-              hour: '2-digit'
-            }), lastStream, currentIndex, startTime, isNewUser);
+        }
+        //console.log("Current index: " + currentIndex);
+        var oldDate = new Date(lastStreamTimestamp);
+        var newDate = new Date(start_time);
+        var streamDiff = newDate - oldDate;
+        if (Math.sign(streamDiff) != -1) {
+          console.log((streamDiff / 36e5).toFixed(2) + " hours since last alert.");
+          console.log("Is new user? " + isNewUser);
+          console.log("Is offline? " + isOffline);
+        if ((streamDiff > 0.5 * 36e5 || isNewUser) && isOffline) {
+          console.log("New stream");
+          sendToBot(user_name, gameName, title, longDate, "new stream", date, start_time.toLocaleString('default', {
+            hour: '2-digit'
+          }), lastStream, currentIndex, startTime, isNewUser);
+          res.status(200).send();
+        } else if (lastGame != gameName) {
+          console.log("New game");
+          sendToBot(user_name, gameName, title, longDate, "new game", date, start_time.toLocaleString('default', {
+            hour: '2-digit'
+          }), lastStream, currentIndex, startTime, isNewUser);
+          res.status(200).send();
+        } else {
+          if (!isOffline) {
+            console.log(user_name + " is still online.\nIgnoring alert");
             res.status(200).send();
           } else {
-            if(!isOffline){
-              console.log(user_name + " is still online.");
-            }
-            console.log("Ignoring alert.");
+            console.log("Resetting user status to live.");
+            lastStream.users[currentIndex].status = "live";
+            lastStream.users[currentIndex].timestamp = startTime;
+            newLastStreamString = JSON.stringify(lastStream, null, 2);
+            //console.log(newLastStreamString);
+            fs.writeFileSync("laststream.json", newLastStreamString);
             res.status(200).send();
           }
+        }
+      }else{
+        console.log("Twitch sent a weird alert, timestamp is somehow before the stream's last status update.");
+        if (lastStream.users[currentIndex].status == "offline") {
+          console.log("User is marked as offline.\nResetting user status to live.");
+          lastStream.users[currentIndex].status = "live";
+          lastStream.users[currentIndex].timestamp = startTime;
+          lastStreamString = JSON.stringify(lastStream, null, 2);
+          fs.writeFileSync("laststream.json", lastStreamString);
+        } else if (lastGame != gameName) {
+          console.log("Game has changed, sending new alert.");
+          sendToBot(user_name, gameName, title, longDate, "new game", date, start_time.toLocaleString('default', {
+            hour: '2-digit'
+          }), lastStream, currentIndex, startTime, isNewUser);
+        } else {
+          console.log(user_name + " is already live.\nIgnoring alert.");
+        }
+        res.status(200).send();
+
+      }
+      } else {
+        var options = {
+          hostname: 'api.twitch.tv',
+          path: '/helix/games?id=' + game_id,
+          method: 'GET',
+          headers: gameHeaders
+        }
+        //console.log(options);
+        var gameReq = https.request(options, (gameRes) => {
+          let data = '';
+          gameRes.on('data', (d) => {
+            data += d;
+          });
+          gameRes.on('end', () => {
+            gameJSON = JSON.parse(data);
+            //console.log(gameJSON);
+            gameName = gameJSON.data[0].name;
+            //console.log("Game: " + gameName);
+            var user_name = json.data[0].user_name;
+            var title = json.data[0].title;
+            var start_time = new Date(json.data[0].started_at /*+ " +0100"*/ );
+            var startTime = json.data[0].started_at;
+            //console.log(start_time);
+            //console.log(startTime);
+            var time_now = new Date(Date.now());
+            var user_count = json.data[0].viewer_count;
+            var hours = start_time.toLocaleString('default', {
+              hour: 'numeric'
+            });
+            var minutes = start_time.toLocaleString('default', {
+              minute: '2-digit'
+            });
+            var ampm = hours >= 12 ? 'PM' : 'AM';
+            if (hours != 12) {
+              hours = hours % 12;
+            }
+            hours = hours < 10 ? '0' + hours : hours;
+            minutes = minutes < 10 ? '0' + minutes : minutes;
+            var strTime = hours + ':' + minutes + ampm;
+            var date = start_time.toLocaleString('default', {
+              month: 'long',
+              timeZone: 'UTC'
+            }) + " " + start_time.toLocaleString('default', {
+              day: '2-digit'
+            }) + ", " + start_time.toLocaleString('default', {
+              year: 'numeric'
+            });
+            var longDate = start_time.toLocaleString('default', {
+              month: 'long',
+              timeZone: 'UTC'
+            }) + " " + start_time.toLocaleString('default', {
+              day: '2-digit'
+            }) + ", " + start_time.toLocaleString('default', {
+              year: 'numeric'
+            }) + " at " + strTime;
+            if (fs.existsSync("laststream.json")) {
+              lastStreamJSON = fs.readFileSync("laststream.json", "utf8");
+              //console.log(lastStreamJSON);
+            } else {
+              fs.writeFileSync("laststream.json");
+            }
+            var lastGame;
+            var lastStreamTimestamp;
+            var lastStream = JSON.parse(lastStreamJSON);
+            var isNewUser;
+            if (lastStream.users !== undefined && lastStream.users.length > 0) {
+              console.log("Logs exist");
+              for (var j = 0; j < lastStream.users.length; j++) {
+                //console.log("Checking logs in index " + j);
+                if (user_name == lastStream.users[j].user_name) {
+                  console.log(user_name + " has a log, comparing...");
+                  currentIndex = j;
+                  //console.log(currentIndex);
+                  lastGame = lastStream.users[j].game;
+                  lastStreamTimestamp = lastStream.users[j].timestamp;
+                  isNewUser = false;
+                  if(lastStream.users[j].status == "live"){
+                    isOffline = false;
+                  }else if (lastStream.users[j].status == "offline"){
+                    isOffline = true;
+                  }
+                  break;
+                }
+                //console.log("Current index: " + j + " and length: " + lastStream.users.length);
+                if (j == (lastStream.users.length - 1) && user_name != lastStream.users[j].user_name) {
+                  console.log(user_name + " does not have a log.");
+                  lastGame = "";
+                  lastStreamTimestamp = "";
+                  isNewUser = true;
+                  isOffline = true;
+                }
+              }
+            }
+            //console.log("Current index: " + currentIndex);
+            var oldDate = new Date(lastStreamTimestamp);
+            var newDate = new Date(start_time);
+            var streamDiff = newDate - oldDate;
+            if (Math.sign(streamDiff) != -1) {
+              console.log((streamDiff / 36e5).toFixed(2) + " hours since last alert.");
+              console.log("Is new user? " + isNewUser);
+              console.log("Is offline? " + isOffline);
+            if ((streamDiff > 1 * 36e5 || isNewUser) && isOffline) {
+              console.log("New stream");
+              sendToBot(user_name, gameName, title, longDate, "new stream", date, start_time.toLocaleString('default', {
+                hour: '2-digit'
+              }), lastStream, currentIndex, startTime, isNewUser);
+              res.status(200).send();
+            } else if (lastGame != gameName) {
+              console.log("New game");
+              sendToBot(user_name, gameName, title, longDate, "new game", date, start_time.toLocaleString('default', {
+                hour: '2-digit'
+              }), lastStream, currentIndex, startTime, isNewUser);
+              res.status(200).send();
+            } else {
+              if (!isOffline) {
+                console.log(user_name + " is still online.\nIgnoring alert");
+                res.status(200).send();
+              } else {
+                console.log("Resetting user status to live.");
+                lastStream.users[currentIndex].status = "live";
+                newLastStreamString = JSON.stringify(lastStream, null, 2);
+                //console.log(newLastStreamString);
+                fs.writeFileSync("laststream.json", newLastStreamString);
+                res.status(200).send();
+              }
+            }
+          }else{
+            console.log("Twitch sent a weird alert, timestamp is somehow before the stream's last status update.");
+            if (lastStream.users[currentIndex].status == "offline") {
+              console.log("User is marked as offline.\nResetting user status to live.");
+              lastStream.users[currentIndex].status = "live";
+              lastStreamString = JSON.stringify(lastStream, null, 2);
+              fs.writeFileSync("laststream.json", lastStreamString);
+            } else if (lastGame != gameName) {
+              console.log("Game has changed, sending new alert.");
+              sendToBot(user_name, gameName, title, longDate, "new game", date, start_time.toLocaleString('default', {
+                hour: '2-digit'
+              }), lastStream, currentIndex, startTime, isNewUser);
+            } else {
+              console.log(user_name + " is already live.\nIgnoring alert.");
+            }
+            res.status(200).send();
+
+          }
+          });
         });
-      });
-      gameReq.on('error', (error) => {
-        console.error(error)
-      })
-      gameReq.end();
+        gameReq.on('error', (error) => {
+          console.error(error)
+        })
+        gameReq.end();
+      }
       //EVERYTHING SHOULD WORK HERE, TEST DISCORD WEBHOOK POST NEXT
     } else {
       //console.log("Empty array, stream is offline.");
@@ -542,13 +701,13 @@ router.post('/api', (req, res) => {
           offlineUserName = usersJSON.users[i].user_name;
           console.log(offlineUserName + " is offline, setting status...");
           offlineJSON = JSON.parse(fs.readFileSync("laststream.json", "utf8"));
-          for(var j = 0; j < offlineJSON.users.length; j++){
-            if(offlineJSON.users[j].user_name == offlineUserName){
-              if(offlineJSON.users[j].status == "offline"){
+          for (var j = 0; j < offlineJSON.users.length; j++) {
+            if (offlineJSON.users[j].user_name == offlineUserName) {
+              if (offlineJSON.users[j].status == "offline") {
                 console.log(offlineUserName + " is already marked as offline.");
                 res.status(200).send();
                 break;
-              }else{
+              } else {
                 oldTimestamp = new Date(offlineJSON.users[j].timestamp);
                 currentTimestamp = new Date(req.headers['twitch-notification-timestamp']);
                 timeDiff = currentTimestamp - oldTimestamp;
