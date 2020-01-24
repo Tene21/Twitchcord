@@ -948,13 +948,20 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
       }
       continue;
     } else {
-      console.log(userName + " and " + usersJSON.users[i].user_name + " do not match, checking next entry...");
-      continue;
+      //console.log(userName + " and " + usersJSON.users[i].user_name + " do not match.");
+      if (i == (usersJSON.users.length - 1)) {
+        //console.log("End of JSON reached.");
+        continue;
+      } else {
+        //console.log("Checking next entry...");
+        continue;
+      }
     }
     console.log("User not in JSON. Please add their data to users.json");
   }
 
 }
+
 function sendYoutube(title, videoId, webhookUrl, message){
   data = JSON.stringify({
     content: message + "**" + title  + "** https://youtu.be/" + videoId
