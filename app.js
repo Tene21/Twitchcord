@@ -224,157 +224,104 @@ router.post('/api/yt', (req, res) => {
   var hasLog = false;
   req.accepts('application/atom+xml')
   console.log("POST request received at " + Date(Date.now()).toString());
-  console.log(req.body);
-  res.status(200);
-  //console.log(JSON.stringify(req.headers));
-  /*if (!req.isXHub && req.headers.secret != clientSecret) {
-    console.log("No XHub signature");
-    res.status(403);
-    res.send();
-  } else if (req.headers.secret == clientSecret || req.isXHubValid()) {
-    console.log("Valid XHub signature.");*/
-    /*
+  //console.log(req.body);
+  res.status(200).send();go
   if (req.body.feed['at:deleted-entry'] != undefined) {
     console.log("Deleted video alert, ignore.");
     console.log("Also outputting deleted entry value out of curiosity.");
     console.log(JSON.stringify(req.body.feed['at:deleted-entry']));
-  } else if(req.body.feed.title == "YouTube video feed"){
+  } else if (req.body.feed.title == "YouTube video feed") {
     //console.log("Not a deleted video alert.");
     console.log("Alert from user " + req.body.feed.entry.author.name);
     //console.log("Entry: " + req.body.feed.entry);
     //console.log("Channel ID: " + req.body.feed.entry['yt:channelId']);
     userID = req.body.feed.entry['yt:channelId'];
     //console.log("Video ID: " + req.body.feed.entry['yt:videoId']);
-    videoID = req.body.feed.entry['yt:videoId'];
-    videoTitle = he.decode(req.body.feed.entry.title);
-    //console.log("Timestamp: " + req.body.feed.entry.published);
-    yTTimestamp = req.body.feed.entry.published;
-    youtubeJSON = JSON.parse(fs.readFileSync("youtubeusers.json", "utf8"));
-    console.log("Checking if " + req.body.feed.entry.author.name + " is in youtubeuser.json");
     for (let i = 0; i < youtubeJSON.users.length; i++) {
       //console.log("Index: " + i + ", user: " + userID + ", compare to: " + youtubeJSON.users[i].id);
       if (userID == youtubeJSON.users[i].id) {
-        console.log(req.body.feed.entry.author.name + " is in youtubeusers.json as " + youtubeJSON.users[i].user);
-        if(req.body.feed.entry.author.name != youtubeJSON.users[i].user){
-          console.log("Alert username and youtubeusers.json username do not match, updating...");
-          youtubeJSON.users[i].user = req.body.feed.entry.author.name;
-          newYoutubeString = JSON.stringify(youtubeJSON, null, 2);
-          fs.writeFileSync("youtubeusers.json", newYoutubeString);
+        console.log(userID + " is in youtubeusers.json");
+        var yTOptions = {
+          hostname: 'www.googleapis.com',
+          path: '/youtube/v3/search?part=snippet&channelId=' + userID + "&maxResults=10&order=date&key=" + youtubeKey + "&type=video",
+          method: 'GET'
         }
-        console.log("Checking if " + youtubeJSON.users[i].user + " has a record.");
-        lastVideoJSON = JSON.parse(fs.readFileSync("lastvideo.json", "utf8"));
-        //console.log(lastVideoJSON);
-        for (let j = 0; j < lastVideoJSON.users.length; j++) {
-          //console.log("Index: " + j + ", user: " + userID + ", compare to: " + lastVideoJSON.users[j].id);
-          if (lastVideoJSON.users[j].id == userID) {
-            console.log(youtubeJSON.users[i].user + " has a record, previous video ID: " + lastVideoJSON.users[j].video_id);
-            if (videoID != lastVideoJSON.users[j].video_id) {
-              console.log("New video ID does not match logged ID, comparing timestamps.");
-              var oldTime = new Date(lastVideoJSON.users[j].timestamp);
-              var newTime = new Date(yTTimestamp);
-              //console.log("Old: " + oldTime + ", new: " + newTime);
-              ignoreTimeout = youtubeJSON.users[i].ignore_timeouts;
-              timeout = youtubeJSON.users[i].timeout;
-              var difference = newTime - oldTime;
-              console.log("ms difference: " + difference);
-              console.log(difference / 6e4 + " minutes have passed since the last alert was sent");
-              if (Math.sign(difference) != -1) {
-                if (!ignoreTimeout && difference < timeout * 6e4) {
-                  console.log("Not enough time has passed since the last alert and the user has a timeout set.");
-                } else if (ignoreTimeout || difference >= timeout * 6e4 || oldTime == "Invalid Date") {
-                  console.log("Enough time has passed since last alert or user has chosen to ignore timeouts");
-                  sendYoutube = JSON.stringify({
-                    content: youtubeJSON.users[i].message + "**" + videoTitle + "** https://youtu.be/" + videoID
-                  });
-                  youBotOptions = {
-                    hostname: 'discordapp.com',
-                    path: youtubeJSON.users[i].webhook_url,
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json'
+        //console.log(options);
+        var youReq = https.request(yTOptions, (youRes) => {
+          let data = ''
+          youRes.on('data', (d) => {
+            data += d;
+          });
+          youRes.on('end', () => {
+            //console.log(data);
+            let firstVideo = "";
+            latestVideo = JSON.parse(data);
+            if(latestVideo.items.length == 0){
+              console.log("No video in API request, google being slow.\nNot my fault.");
+            }else{
+              for (j = 0; j < lastVideoJSON.users.length; j++) {
+                if (lastVideoJSON.users[j].id == userID) {
+                  console.log(lastVideoJSON.users[j].user + " has a YT log.\nLatest video: " + lastVideoJSON.users[i].video_id);
+                  if (latestVideo.items[0].id.videoId != lastVideoJSON.users[j].video_id) {
+                    console.log("Latest video has changed since last alert.\nChecking for multiple new videos.");
+                    for(let k = 0; k < latestVideo.items.length; k++){
+                      if(latestVideo.items[k].id.videoId == lastVideoJSON.users[j].video_id){
+                        console.log("Reached the video from the latest alert.");
+                        if(firstVideo != ""){
+                          console.log("Updating JSON to show most recent video.");
+                          lastVideoJSON.users[j].video_id = firstVideo;
+                          fs.writeFileSync("lastvideo.json", JSON.stringify(lastVideoJSON, null, 2));
+                        }
+                        break;
+                      }else if(k == 0){
+                        console.log("Sending an alert for the first video in the list.\nTitle: " + latestVideo.items[k].snippet.title + "\nURL: " + latestVideo.items[k].id.videoId + "\nMarking this as the most recent video.");
+                        sendYoutube(latestVideo.items[k].snippet.title, latestVideo.items[k].id.videoId, youtubeJSON.users[i].webhook_url, youtubeJSON.users[i].message);
+                        firstVideo = latestVideo.items[k].id.videoId;
+                      }else if((k + 1) == latestVideo.items.length) {
+                        console.log("Sending an alert for the last video in the list.\nTitle: " + latestVideo.items[k].snippet.title + "\nURL: " + latestVideo.items[k].id.videoId + "\nUpdating JSON to show most recent video.");
+                        sendYoutube(latestVideo.items[k].snippet.title, latestVideo.items[k].id.videoId, youtubeJSON.users[i].webhook_url, youtubeJSON.users[i].message);
+                        lastVideoJSON.users[j].video_id = firstVideo;
+                        fs.writeFileSync("lastvideo.json", JSON.stringify(lastVideoJSON, null, 2));
+                      }else{
+                        console.log("Sending an alert for video titled: " + latestVideo.items[k].snippet.title + "\nURL: " + latestVideo.items[k].id.videoId);
+                        sendYoutube(latestVideo.items[k].snippet.title, latestVideo.items[k].id.videoId, youtubeJSON.users[i].webhook_url, youtubeJSON.users[i].message);
+                      }
                     }
+                  } else {
+                    console.log("Latest video has not changed since last alert.");
+                    break;
                   }
-                  youBotReq = https.request(youBotOptions, youBotRes => {
-                    youBotRes.on('data', d => {
-                      process.stdout.write(d);
-                    });
-
+                } else if (j == (lastVideoJSON.users.length - 1) && lastVideoJSON.users[j].id != userID) {
+                  console.log("Current index: " + j + ", length: " + lastVideoJSON.users.length);
+                  console.log("JSON ID: " + lastVideoJSON.users[j].id + ", userID: " + userID);
+                  console.log("User does not have a log.\nAssuming latest video is new and populating JSON...");
+                  sendYoutube(latestVideo.items[0].snippet.title, latestVideo.items[0].id.videoId, youtubeJSON.users[i].webhook_url, youtubeJSON.users[i].message);
+                  lastVideoJSON.users.push({
+                    user: youtubeJSON.users[i].user,
+                    id: youtubeJSON.users[i].id,
+                    video_id: latestVideo.items[0].id.videoId
                   });
-                  youBotReq.on('error', error => {
-                    console.error(error);
-                  });
-                  youBotReq.write(sendYoutube);
-                  youBotReq.end();
-                  console.log("Discord alert sent for " + youtubeJSON.users[i].user + "'s YouTube upload.");
-                  lastVideoJSON.users[j].video_id = videoID;
-                  lastVideoJSON.users[j].timestamp = yTTimestamp;
-                  newLastVideoString = JSON.stringify(lastVideoJSON, null, 2);
-                  fs.writeFileSync("lastvideo.json", newLastVideoString);
-                  res.status(200).end();
-                  hasLog = true;
+                  fs.writeFileSync("lastvideo.json", JSON.stringify(lastVideoJSON, null, 2));
                   break;
                 }
-              } else {
-                console.log("Negative difference, this alert is somehow older than the latest alert.");
-                res.status(200).end();
-                hasLog = true;
-                break;
-              }
-            }else{
-              console.log("Video ID hasn't changed.");
-              res.status(200).end();
-              hasLog = true;
-              break;
-            }
-          } else if (j == lastVideoJSON.users.length - 1 && lastVideoJSON.users[j].id != userID && !hasLog) {
-            console.log("User has no logs, generating logs from data.");
-            sendYoutube = JSON.stringify({
-              content: youtubeJSON.users[i].message + "**" + videoTitle + "** https://youtu.be/" + videoID
-            });
-            youBotOptions = {
-              hostname: 'discordapp.com',
-              path: youtubeJSON.users[i].webhook_url,
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json'
               }
             }
-            youBotReq = https.request(youBotOptions, youBotRes => {
-              youBotRes.on('data', d => {
-                process.stdout.write(d);
-              });
-
-            });
-            youBotReq.on('error', error => {
-              console.error(error);
-            });
-            youBotReq.write(sendYoutube);
-            youBotReq.end();
-            console.log("Discord alert sent for " + youtubeJSON.users[i].user + "'s YouTube upload.");
-            lastVideoJSON.users.push({
-              user: youtubeJSON.users[i].user,
-              id: youtubeJSON.users[i].id,
-              video_id: videoID,
-              timestamp: yTTimestamp
-            });
-            newLastVideoString = JSON.stringify(lastVideoJSON, null, 2);
-            fs.writeFileSync("lastvideo.json", newLastVideoString);
-            res.status(200).end();
-            break;
-          }
-        }
-      } else if (i == youtubeJSON.users.length - 1 && youtubeJSON.users[i].id != userID) {
-        console.log("User not in youtubeusers.json");
-        res.status(403).end();
+          });
+        });
+        youReq.on('error', (error) => {
+          console.error(error);
+        });
+        youReq.end();
+        break;
       }
     }
-  }else{
+  } else {
     console.log("Weird alert, not a video or a deletion. Outputting request body.");
     console.log(JSON.stringify(req.body));
     res.status(403).end();
   }
-  */
-//}
+
+  //}
 });
 
 //POST webhook route
@@ -870,4 +817,29 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
     console.log("User not in JSON. Please add their data to users.json");
   }
 
+}
+function sendYoutube(title, videoId, webhookUrl, message){
+  data = JSON.stringify({
+    content: message + "**" + title  + "** https://youtu.be/" + videoId
+  });
+  console.log(data);
+  youBotOptions = {
+    hostname: 'discordapp.com',
+    path: webhookUrl,
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  }
+
+  youBotReq = https.request(youBotOptions, youBotRes => {
+    youBotRes.on('data', d => {
+      process.stdout.write(d)
+    });
+  });
+  youBotReq.on('error', error => {
+    console.error(error)
+  });
+  youBotReq.write(data);
+  youBotReq.end();
 }
