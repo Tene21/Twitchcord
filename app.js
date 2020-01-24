@@ -698,6 +698,109 @@ httpsServer.listen(443, () => {
   console.log('HTTPS Server running on port 443');
 });
 
+//get user status
+router.get('/api/status/:userName', (req, res) => {
+  //console.log("Outputting status for " + req.params.userName);
+  lastGame = "";
+  for (var i = 0; i < usersJSON.users.length; i++) {
+    if (usersJSON.users[i].user_name.toLowerCase() == req.params.userName.toLowerCase() && usersJSON.users[i].user_id != "duplicate_user") {
+      //console.log(usersJSON.users[i].user_name + " is in users.json");
+      if (fs.existsSync("laststream.json")) {
+        lastStreamJSON = JSON.parse(fs.readFileSync("laststream.json", "utf8"));
+        //console.log(lastStreamJSON);
+      } else {
+        console.log("laststream.json does not exist.");
+        break;
+      }
+      for (var j = 0; j < lastStreamJSON.users.length; j++) {
+        if (usersJSON.users[i].user_name == lastStreamJSON.users[j].user_name) {
+          //console.log(usersJSON.users[i].user_name + " has a log");
+          if (lastStreamJSON.users[j].game == null) {
+            lastGame = "in a category with no ID";
+          } else {
+            lastGame = lastStreamJSON.users[j].game;
+          }
+          oldTime = new Date(lastStreamJSON.users[j].timestamp);
+          newTime = Date.now();
+          timeDiff = newTime - oldTime;
+          timeDiff = (timeDiff / 36e5).toFixed(2);
+          outputString = "<a class=\"username\" href=\"http://twitch.tv/" +
+            lastStreamJSON.users[j].user_name.toLowerCase() + "\">" +
+            lastStreamJSON.users[j].user_name + "</a> has been " +
+            lastStreamJSON.users[j].status + " for " + timeDiff + " hours";
+          if (lastStreamJSON.users[j].status == "offline") {
+            outputString += " and was last streaming " + lastGame;
+          } else {
+            outputString += " and is currently streaming " + lastGame;
+          }
+          if (lastStreamJSON.users[j].game_changed_count != 0) {
+            outputString += " after changing games " + lastStreamJSON.users[j].game_changed_count + " time";
+            if (lastStreamJSON.users[j].game_changed_count == 1) {
+              outputString += ".";
+            } else {
+              outputString += "s."
+            }
+          } else {
+            outputString += ".";
+          }
+          //console.log(outputString);
+          currentStatus = "<div id=\"currentstatus\">" + outputString + "</div>"
+          tableString = "<div id=\"indextable\" class=\"table\"><table><tr><th>User</th><th>Status</th><th>Game</th><th>Preview</th></tr>";
+          for (var k = 0; k < lastStreamJSON.users.length; k++) {
+            tableString += "<tr><td><a href=\"/api/status/" + lastStreamJSON.users[k].user_name +
+              "\">" + lastStreamJSON.users[k].user_name + "</a></td><td>" +
+              lastStreamJSON.users[k].status.charAt(0).toUpperCase() +
+              lastStreamJSON.users[k].status.slice(1) + "</td><td>";
+            /*if(lastStreamJSON.users[k].status == "offline"){
+              tableString += "N/A";
+            }else{
+              */
+            tableString += lastStreamJSON.users[k].game;
+            /*
+            }
+            */
+            tableString += "</td><td><a href=\"http://twitch.tv/" + lastStreamJSON.users[k].user_name.toLowerCase() + "\"><img src=";
+            if (lastStreamJSON.users[k].status == "offline") {
+              for (var l = 0; l < usersJSON.users.length; l++) {
+                if (usersJSON.users[l].user_name == lastStreamJSON.users[k].user_name && usersJSON.users[l].user_id != "duplicate_user") {
+                  if (usersJSON.users[l].offline_image != "") {
+                    tableString += usersJSON.users[l].offline_image;
+                  } else {
+                    tableString += "https://static-cdn.jtvnw.net/ttv-static/404_preview-640x360.jpg";
+                  }
+                }
+              }
+            } else {
+              tableString += "https://static-cdn.jtvnw.net/previews-ttv/live_user_" +
+                lastStreamJSON.users[k].user_name.toLowerCase() + "-640x360.jpg?random=" +
+                Math.floor(100000 + Math.random() * 900000);
+            }
+
+            tableString += " width=150 height=85></td></a></tr>";
+          }
+          tableString += "</table></div>";
+          //console.log(tableString);
+          displayString = "<script src= \"https://embed.twitch.tv/embed/v1.js\">" +
+            "</script> <div id=\"streamembed\"></div> <script type=\"text/javascript\">" +
+            "new Twitch.Embed(\"streamembed\", { width: window.innerWidth * 0.675, height:" +
+            "(((window.innerWidth * 0.5) / 16) * 9), channel: \"" +
+            usersJSON.users[i].user_name + "\"}); </script>" + currentStatus;
+          res.status(200).send("<html><head><link href=\"/css/status.css\" rel=\"stylesheet\"><title>" +
+            lastStreamJSON.users[j].user_name + " status</title></head><body>" + displayString +
+            tableString + "</body></html>");
+          break;
+        }
+      }
+      break;
+    } else if (i == (usersJSON.users.length - 1)) {
+      console.log(req.params.userName + " is not in users.json");
+      res.status(404).send("<!DOCTYPE html><html><head><title>Unregistered user</title></head><body>" +
+        req.params.userName + " is not registered with this API.<br>Please contact " +
+        "<a href=\"mailto:admin@tene.dev\">admin@tene.dev</a> if you would like to fix that.</body></html>");
+    }
+  }
+});
+
 //SEND POST REQUEST TO DISCORD WEBHOOK URL
 function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate, hour, lastStream, jsonIndex, fullTimeStamp, isNewUser) {
   var message;
