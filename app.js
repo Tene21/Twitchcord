@@ -143,14 +143,11 @@ app.use(xhub({
   secret: clientSecret
 }));
 app.use(bodyParser.json());
-app.use(bodyParser.text({type: 'application/atom+xml'}));
-/*
 app.use(bodyParser.xml({
   xmlParseOptions: {
     explicitArray: false
   }
 }));
-*/
 app.use(bodyParser.raw());
 
 router.use(function(req, res, next) {
