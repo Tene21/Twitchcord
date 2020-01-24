@@ -215,7 +215,7 @@ router.get('/api/yt', (req, res) => {
 
   }
   //console.log(req.query);
-  res.status(200);
+  res.status(200).send();
 });
 
 
