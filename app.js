@@ -851,32 +851,57 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
         message = usersJSON.users[i].stream_message;
         gameChangedCount = 0;
       }
-      data = JSON.stringify({
-        content: message,
-        embeds: [{
-          color: usersJSON.users[i].accent_colour,
-          author: {
-            icon_url: "https://static-cdn.jtvnw.net/jtv_user_pictures/" + usersJSON.users[i].profile_image,
-            name: userName,
-            url: "http://twitch.tv/" + usersJSON.users[i].user_name
-          },
-          description: "[" + streamTitle + "](http://twitch.tv/" + usersJSON.users[i].internal_id + ")",
-          thumbnail: {
-            url: "https://static-cdn.jtvnw.net/jtv_user_pictures/" + usersJSON.users[i].profile_image
-          },
-          fields: [{
-            name: "Game",
-            value: gameName,
-            inline: true
-          }],
-          image: {
-            url: thumbnailURL
-          },
-          footer: {
-            text: startTime
-          }
-        }]
-      });
+      //console.log("Thumbnail URL: " + thumbnailURL);
+      if (gameName == null) {
+        data = JSON.stringify({
+          content: message,
+          embeds: [{
+            color: usersJSON.users[i].accent_colour,
+            author: {
+              icon_url: "https://static-cdn.jtvnw.net/jtv_user_pictures/" + usersJSON.users[i].profile_image,
+              name: userName,
+              url: "http://twitch.tv/" + usersJSON.users[i].user_name
+            },
+            description: "[" + streamTitle + "](http://twitch.tv/" + usersJSON.users[i].internal_id + ")",
+            thumbnail: {
+              url: "https://static-cdn.jtvnw.net/jtv_user_pictures/" + usersJSON.users[i].profile_image
+            },
+            image: {
+              url: thumbnailURL
+            },
+            footer: {
+              text: startTime
+            }
+          }]
+        });
+      } else {
+        data = JSON.stringify({
+          content: message,
+          embeds: [{
+            color: usersJSON.users[i].accent_colour,
+            author: {
+              icon_url: "https://static-cdn.jtvnw.net/jtv_user_pictures/" + usersJSON.users[i].profile_image,
+              name: userName,
+              url: "http://twitch.tv/" + usersJSON.users[i].user_name
+            },
+            description: "[" + streamTitle + "](http://twitch.tv/" + usersJSON.users[i].internal_id + ")",
+            thumbnail: {
+              url: "https://static-cdn.jtvnw.net/jtv_user_pictures/" + usersJSON.users[i].profile_image
+            },
+            fields: [{
+              name: "Game",
+              value: gameName,
+              inline: true
+            }],
+            image: {
+              url: thumbnailURL
+            },
+            footer: {
+              text: startTime
+            }
+          }]
+        });
+      }
       //console.log(data);
       botOptions = {
         hostname: 'discordapp.com',
