@@ -840,9 +840,9 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
           gameChangedCount = lastStreamParsed.users[jsonIndex].game_changed_count;
           gameChangedCount++;
           console.log(userName + " has changed games " + gameChangedCount + " times this stream.");
-          if(userName == "Kiwo"){
+          if (usersJSON.users[i].game_message == "Now playing" && gameName != null) {
             message = usersJSON.users[i].game_message + " - " + gameName;
-          }else{
+          } else {
             message = usersJSON.users[i].game_message;
           }
           thumbnailURL = thumbnailURL + "&newgame" + gameChangedCount;
