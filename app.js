@@ -813,16 +813,25 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
   //console.log(usersJSON.users);
 
   console.log("Checking if user is in users.json");
+  var found = false;
   for (var i = 0; i < usersJSON.users.length; i++) {
     lastStreamParsed = JSON.parse(lastStreamJSON);
     //console.log(usersJSON.users[i]);
-    console.log("Checking index " + i + " for user " + userName);
-    console.log("Comparing " + userName + " to " + usersJSON.users[i].user_name);
+    //console.log("Checking index " + (i + 1) + " for user " + userName);
+    //console.log("Comparing " + userName + " to " + usersJSON.users[i].user_name);
     if (usersJSON.users[i].user_name == userName) {
-      console.log(userName + " and " + usersJSON.users[i].user_name + " match, proceeding...");
-      console.log("Last stream index: " + jsonIndex);
+      if (found == false) {
+        console.log(userName + " is in users.json");
+        found = true;
+      } else {
+        console.log("Duplicate entry found for " + userName);
+      }
+
+      //console.log("Last stream index: " + jsonIndex);
       var gameChangedCount;
-      var thumbnailURL = "https://static-cdn.jtvnw.net/previews-ttv/live_user_" + usersJSON.users[i].internal_id + "-640x360.jpg?" + fullTimeStamp;
+      var thumbnailURL = "https://static-cdn.jtvnw.net/previews-ttv/live_user_" +
+        usersJSON.users[i].internal_id + "-640x360.jpg?" + fullTimeStamp;
+
       if (!isNewUser) {
         if (reason == "new stream") {
           message = usersJSON.users[i].stream_message;
