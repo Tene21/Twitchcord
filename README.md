@@ -45,7 +45,6 @@ The server also stores data regarding the previous stream of each user in a simi
 The server is capable of serving HTML pages, and will attempt to serve index.html upon receiving a GET request at a root path, otherwise it will serve a generic page warning that no HTML was provided.
 
 ## YouTube
-#### CURRENTLY BROKEN
 Can now provide Discord alerts for YouTube uploads. Relies on JSON similar to the Twitch functionality:
 
 ### User data
