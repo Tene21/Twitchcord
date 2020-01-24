@@ -20,8 +20,8 @@ const clientSecret = fs.readFileSync("secret", "utf8");
 const htmlPath = __dirname + '/views/';
 
 // Certificate
-const privateKey = fs.readFileSync('/etc/letsencrypt/live/tene.dev/privkey.pem', 'utf8');
-const certificate = fs.readFileSync('/etc/letsencrypt/live/tene.dev/cert.pem', 'utf8');
+const privateKey = fs.readFileSync('/etc/letsencrypt/live/www.tene.dev/privkey.pem', 'utf8');
+const certificate = fs.readFileSync('/etc/letsencrypt/live/www.tene.dev/fullchain.pem', 'utf8');
 const ca = fs.readFileSync('/etc/letsencrypt/live/tene.dev/chain.pem', 'utf8');
 
 const credentials = {
