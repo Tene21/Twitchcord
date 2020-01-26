@@ -5,7 +5,7 @@ Originally developed to replace IFTTT as Twitch streamer Limealicious' live aler
 
 Relies on local JSON files storing essential data regarding target streams, in the following format:
 
-##Twitch
+## Twitch
 
 ### User data
 
