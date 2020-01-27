@@ -225,7 +225,7 @@ router.post('/api/yt', (req, res) => {
   req.accepts('application/atom+xml')
   console.log("POST request received at " + Date(Date.now()).toString());
   //console.log(req.body);
-  res.status(200).send();go
+  res.status(200).send();
   if (req.body.feed['at:deleted-entry'] != undefined) {
     console.log("Deleted video alert, ignore.");
     console.log("Also outputting deleted entry value out of curiosity.");
