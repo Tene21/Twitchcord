@@ -224,6 +224,9 @@ router.post('/api/yt', (req, res) => {
   var hasLog = false;
   req.accepts('application/atom+xml')
   console.log("POST request received at " + Date(Date.now()).toString());
+  console.log("Refreshing log...");
+  lastVideoJSON = JSON.parse(fs.readFileSync("lastvideo.json", "utf8"));
+  console.log("Log refreshed.")
   //console.log(req.body);
   res.status(200).send();
   if (req.body.feed['at:deleted-entry'] != undefined) {
