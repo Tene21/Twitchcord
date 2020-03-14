@@ -691,11 +691,41 @@ router.get('/api/status/:userName', (req, res) => {
           oldTime = new Date(lastStreamJSON.users[j].timestamp);
           newTime = Date.now();
           timeDiff = newTime - oldTime;
-          timeDiff = (timeDiff / 36e5).toFixed(2);
+          timeDiffH = (timeDiff / 36e5);
+          if (timeDiffH < 1) {
+            timeDiffH = Math.floor(timeDiffH)
+          } else {
+            timeDiffH = timeDiffH.toFixed();
+          }
+          timeDiffM = (timeDiff / 6e4).toFixed();
+          timeDiffM = timeDiffM % 60;
           outputString = "<a class=\"username\" href=\"http://twitch.tv/" +
             lastStreamJSON.users[j].user_name.toLowerCase() + "\">" +
             lastStreamJSON.users[j].user_name + "</a> has been " +
-            lastStreamJSON.users[j].status + " for " + timeDiff + " hours";
+            lastStreamJSON.users[j].status;
+          if (timeDiffH >= 1) {
+            if (timeDiffH == 1) {
+              outputString += " for " + timeDiffH + " hour";
+            } else {
+              outputString += " for " + timeDiffH + " hours";
+            }
+            if (timeDiffM == 1) {
+              outputString += " and " + timeDiffM + " minute,";
+            } else if (timeDiffM > 1) {
+              outputString += " and " + timeDiffM + " minutes,";
+            } else if (timeDiffM == 0) {
+
+            }
+          } else {
+            if (timeDiffM == 1) {
+              outputString += " for " + timeDiffM + " minute";
+            } else if (timeDiffM > 1) {
+              outputString += " for " + timeDiffM + " minutes";
+            } else if (timeDiffM == 0) {
+              outputString += " since right this very minute"
+            }
+          }
+
           if (lastStreamJSON.users[j].status == "offline") {
             outputString += " and was last streaming " + lastGame;
           } else {
