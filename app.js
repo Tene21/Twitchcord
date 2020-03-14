@@ -771,14 +771,50 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
 
       if (!isNewUser) {
         if (reason == "new stream") {
-          message = usersJSON.users[i].stream_message;
+          if (usersJSON.users[i].stream_message.includes("<game>")) {
+            if(gameName == null){
+              message = usersJSON.users[i].stream_message.replace("<game>", "Unknown Game");
+            }else{
+              message = usersJSON.users[i].stream_message.replace("<game>", gameName);
+            }
+          } else {
+            message = usersJSON.users[i].stream_message;
+          }
+
           gameChangedCount = 0;
         } else if (reason == "new game") {
           gameChangedCount = lastStreamParsed.users[jsonIndex].game_changed_count;
           gameChangedCount++;
-          console.log(userName + " has changed games " + gameChangedCount + " times this stream.");
-          if (usersJSON.users[i].game_message == "Now playing" && gameName != null) {
-            message = usersJSON.users[i].game_message + " - " + gameName;
+          var changeStamp = new Date(Date.now());
+          //console.log(changeStamp);
+          var hours = changeStamp.toLocaleString('default', {
+            hour: 'numeric'
+          });
+          var minutes = changeStamp.toLocaleString('default', {
+            minute: '2-digit'
+          });
+          var ampm = hours >= 12 ? 'PM' : 'AM';
+          if (hours != 12) {
+            hours = hours % 12;
+          }
+          hours = hours < 10 ? '0' + hours : hours;
+          minutes = minutes < 10 ? '0' + minutes : minutes;
+          var strTime = hours + ':' + minutes + ampm;
+          var changeLong = changeStamp.toLocaleString('default', {
+            month: 'long',
+            timeZone: 'UTC'
+          }) + " " + changeStamp.toLocaleString('default', {
+            day: '2-digit'
+          }) + ", " + changeStamp.toLocaleString('default', {
+            year: 'numeric'
+          }) + " at " + strTime;
+          console.log(userName + " has changed games " + gameChangedCount + " times this stream.\nLast game change was at " + changeLong);
+          if (usersJSON.users[i].game_message.includes("<game>")) {
+            if(gameName == null){
+              message = usersJSON.users[i].game_message.replace("<game>", "something else");
+            }else{
+              message = usersJSON.users[i].game_message.replace("<game>", gameName);
+            }
           } else {
             message = usersJSON.users[i].game_message;
           }
