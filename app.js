@@ -799,7 +799,7 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
               name: userName,
               url: "http://twitch.tv/" + usersJSON.users[i].user_name
             },
-            description: "[" + streamTitle + "](http://twitch.tv/" + usersJSON.users[i].internal_id + ")",
+            description: "**[" + streamTitle + "](http://twitch.tv/" + usersJSON.users[i].internal_id + ")**",
             thumbnail: {
               url: "https://static-cdn.jtvnw.net/jtv_user_pictures/" + usersJSON.users[i].profile_image
             },
@@ -821,7 +821,7 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
               name: userName,
               url: "http://twitch.tv/" + usersJSON.users[i].user_name
             },
-            description: "[" + streamTitle + "](http://twitch.tv/" + usersJSON.users[i].internal_id + ")",
+            description: "**[" + streamTitle + "](http://twitch.tv/" + usersJSON.users[i].internal_id + ")**",
             thumbnail: {
               url: "https://static-cdn.jtvnw.net/jtv_user_pictures/" + usersJSON.users[i].profile_image
             },
