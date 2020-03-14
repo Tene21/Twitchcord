@@ -18,6 +18,8 @@ const clientID = fs.readFileSync("clientid", "utf8");
 const youtubeKey = fs.readFileSync("youtubeKey", "utf8");
 const clientSecret = fs.readFileSync("secret", "utf8");
 const htmlPath = __dirname + '/views/';
+const kofiHTML = "<div id='kofi-embed'><script type='text/javascript' src='https://ko-fi.com/widgets/widget_2.js'></script><script type='text/javascript'>kofiwidget2.init('Support Me on Ko-fi', '#00566b', 'tene21');kofiwidget2.draw();</script></div>"
+const htmlMeta = "<meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1, shrink-to-fit=no\"><meta name=\"description\" content=\"\"><meta name=\"author\" content=\"\">"
 
 // Certificate
 const privateKey = fs.readFileSync('/etc/letsencrypt/live/www.tene.dev/privkey.pem', 'utf8');
@@ -729,14 +731,12 @@ router.get('/api/status/:userName', (req, res) => {
           }
           tableString += "</table></div>";
           //console.log(tableString);
-          displayString = "<script src= \"https://embed.twitch.tv/embed/v1.js\">" +
-            "</script> <div id=\"streamembed\"></div> <script type=\"text/javascript\">" +
-            "new Twitch.Embed(\"streamembed\", { width: window.innerWidth * 0.675, height:" +
-            "(((window.innerWidth * 0.5) / 16) * 9), channel: \"" +
-            usersJSON.users[i].user_name + "\"}); </script>" + currentStatus;
-          res.status(200).send("<html><head><link href=\"/css/status.css\" rel=\"stylesheet\"><title>" +
-            lastStreamJSON.users[j].user_name + " status</title></head><body>" + displayString +
-            tableString + "</body></html>");
+          displayString = "<div id=\"streamembed\" class='container' style='width: 100vw; height: 56.25vw; max-height: 50vh; max-width: 88.89vh; margin-left: -8px; margin-top: -8px; position: relative; top:0; left:0;'><iframe style='position:absolute; top:0; left:0' src='https://player.twitch.tv/?channel=" +
+            usersJSON.users[i].user_name + "&muted=true' height=100% width=100%" +
+            " frameborder='0' scrolling='no' allowfullscreen='true'></iframe></div>" + currentStatus;
+          res.status(200).send("<html><head>" + htmlMeta + "<link href=\"/css/status.css\" rel=\"stylesheet\"><title>" +
+            lastStreamJSON.users[j].user_name + " status</title></head><body>" +
+            displayString + tableString + kofiHTML + "</body></html>");
           break;
         }
       }
