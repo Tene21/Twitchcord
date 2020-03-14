@@ -39,6 +39,11 @@ var lastVideoJSON = JSON.parse(fs.readFileSync("lastvideo.json", "utf8"));
 var usersJSONInput = fs.readFileSync("users.json", "utf8");
 var usersJSON = JSON.parse(usersJSONInput);
 
+//sleep function
+const sleep = (milliseconds) => {
+  return new Promise(resolve => setTimeout(resolve, milliseconds));
+}
+
 //automatically refresh topic subscriptions every day at midnight
 var j = schedule.scheduleJob('0 0 * * *', function() {
   console.log("Refreshing Twitch subscriptions...");
@@ -243,79 +248,8 @@ router.post('/api/yt', (req, res) => {
     for (let i = 0; i < youtubeJSON.users.length; i++) {
       //console.log("Index: " + i + ", user: " + userID + ", compare to: " + youtubeJSON.users[i].id);
       if (userID == youtubeJSON.users[i].id) {
-        console.log(userID + " is in youtubeusers.json");
-        var yTOptions = {
-          hostname: 'www.googleapis.com',
-          path: '/youtube/v3/search?part=snippet&channelId=' + userID + "&maxResults=10&order=date&key=" + youtubeKey + "&type=video",
-          method: 'GET'
-        }
-        //console.log(options);
-        var youReq = https.request(yTOptions, (youRes) => {
-          let data = ''
-          youRes.on('data', (d) => {
-            data += d;
-          });
-          youRes.on('end', () => {
-            //console.log(data);
-            let firstVideo = "";
-            latestVideo = JSON.parse(data);
-            if(latestVideo.items.length == 0){
-              console.log("No video in API request, google being slow.\nNot my fault.");
-            }else{
-              for (j = 0; j < lastVideoJSON.users.length; j++) {
-                if (lastVideoJSON.users[j].id == userID) {
-                  console.log(lastVideoJSON.users[j].user + " has a YT log.\nLatest video: " + lastVideoJSON.users[i].video_id);
-                  if (latestVideo.items[0].id.videoId != lastVideoJSON.users[j].video_id) {
-                    console.log("Latest video has changed since last alert.\nChecking for multiple new videos.");
-                    for(let k = 0; k < latestVideo.items.length; k++){
-                      if(latestVideo.items[k].id.videoId == lastVideoJSON.users[j].video_id){
-                        console.log("Reached the video from the latest alert.");
-                        if(firstVideo != ""){
-                          console.log("Updating JSON to show most recent video.");
-                          lastVideoJSON.users[j].video_id = firstVideo;
-                          fs.writeFileSync("lastvideo.json", JSON.stringify(lastVideoJSON, null, 2));
-                        }
-                        break;
-                      }else if(k == 0){
-                        console.log("Sending an alert for the first video in the list.\nTitle: " + latestVideo.items[k].snippet.title + "\nURL: " + latestVideo.items[k].id.videoId + "\nMarking this as the most recent video.");
-                        sendYoutube(latestVideo.items[k].snippet.title, latestVideo.items[k].id.videoId, youtubeJSON.users[i].webhook_url, youtubeJSON.users[i].message);
-                        firstVideo = latestVideo.items[k].id.videoId;
-                      }else if((k + 1) == latestVideo.items.length) {
-                        console.log("Sending an alert for the last video in the list.\nTitle: " + latestVideo.items[k].snippet.title + "\nURL: " + latestVideo.items[k].id.videoId + "\nUpdating JSON to show most recent video.");
-                        sendYoutube(latestVideo.items[k].snippet.title, latestVideo.items[k].id.videoId, youtubeJSON.users[i].webhook_url, youtubeJSON.users[i].message);
-                        lastVideoJSON.users[j].video_id = firstVideo;
-                        fs.writeFileSync("lastvideo.json", JSON.stringify(lastVideoJSON, null, 2));
-                      }else{
-                        console.log("Sending an alert for video titled: " + latestVideo.items[k].snippet.title + "\nURL: " + latestVideo.items[k].id.videoId);
-                        sendYoutube(latestVideo.items[k].snippet.title, latestVideo.items[k].id.videoId, youtubeJSON.users[i].webhook_url, youtubeJSON.users[i].message);
-                      }
-                    }
-                  } else {
-                    console.log("Latest video has not changed since last alert.");
-                    break;
-                  }
-                } else if (j == (lastVideoJSON.users.length - 1) && lastVideoJSON.users[j].id != userID) {
-                  console.log("Current index: " + j + ", length: " + lastVideoJSON.users.length);
-                  console.log("JSON ID: " + lastVideoJSON.users[j].id + ", userID: " + userID);
-                  console.log("User does not have a log.\nAssuming latest video is new and populating JSON...");
-                  sendYoutube(latestVideo.items[0].snippet.title, latestVideo.items[0].id.videoId, youtubeJSON.users[i].webhook_url, youtubeJSON.users[i].message);
-                  lastVideoJSON.users.push({
-                    user: youtubeJSON.users[i].user,
-                    id: youtubeJSON.users[i].id,
-                    video_id: latestVideo.items[0].id.videoId
-                  });
-                  fs.writeFileSync("lastvideo.json", JSON.stringify(lastVideoJSON, null, 2));
-                  break;
-                }
-              }
-            }
-          });
-        });
-        youReq.on('error', (error) => {
-          console.error(error);
-        });
-        youReq.end();
-        break;
+        console.log(userID + " is in youtubeusers.json, hopefully async works, check back in a minute.");
+        getYTAPI(i);
       }
     }
   } else {
@@ -989,4 +923,107 @@ function sendYoutube(title, videoId, webhookUrl, message){
   });
   youBotReq.write(data);
   youBotReq.end();
+}
+
+const getYTAPI = async (userIndex) => {
+  await sleep(30000);
+  console.log("Async succeeded at: " + Date(Date.now()).toString());
+  console.log("Reloading lastvideo.json...");
+  lastVideoJSON = JSON.parse(fs.readFileSync("lastvideo.json", "utf8"));
+  console.log("lastvideo.json reloaded.")
+  console.log("Checking YT API manually for " + youtubeJSON.users[userIndex].user + "'s latest video...");
+  var yTOptions = {
+    hostname: 'www.googleapis.com',
+    path: '/youtube/v3/search?part=snippet&channelId=' + userID + "&maxResults=10&order=date&key=" + youtubeKey + "&type=video",
+    method: 'GET'
+  }
+  //console.log(options);
+  var youReq = https.request(yTOptions, (youRes) => {
+    let data = ''
+    youRes.on('data', (d) => {
+      data += d;
+    });
+    youRes.on('end', () => {
+      //console.log(data);
+      let firstVideo = "";
+      latestVideo = JSON.parse(data);
+      if (latestVideo.items.length == 0) {
+        console.log("No video in API request, google being slow.\nNot my fault.");
+      } else {
+        for (j = 0; j < lastVideoJSON.users.length; j++) {
+          if (lastVideoJSON.users[j].id == userID) {
+            console.log(lastVideoJSON.users[j].user + " has a YT log.\nLatest video: " + lastVideoJSON.users[j].video_id);
+            if (latestVideo.items[0].id.videoId != lastVideoJSON.users[j].video_id) {
+              console.log("Latest video has changed since last alert.\nChecking for multiple new videos.");
+              let videos = [];
+              for (let k = 0; k < latestVideo.items.length; k++) {
+                if (latestVideo.items[k].id.videoId == lastVideoJSON.users[j].video_id) {
+                  console.log("Reached the video from the latest alert.");
+                  if (firstVideo != "") {
+                    console.log("Updating JSON to show most recent video.");
+                    lastVideoJSON.users[j].video_id = firstVideo;
+                    fs.writeFileSync("lastvideo.json", JSON.stringify(lastVideoJSON, null, 2));
+                    videos.reverse()
+                    console.log("Video array:\n" + JSON.stringify(videos));
+                  }
+                  break;
+                } else if (k == 0) {
+                  console.log("Sending an alert for the first video in the list.\nTitle: " + latestVideo.items[k].snippet.title +
+                    "\nURL: " + latestVideo.items[k].id.videoId + "\nMarking this as the most recent video.");
+                    videos.push({
+                      title: latestVideo.items[k].snippet.title,
+                      id: latestVideo.items[k].id.videoId
+                    });
+                  sendYoutube(latestVideo.items[k].snippet.title, latestVideo.items[k].id.videoId, youtubeJSON.users[userIndex].webhook_url, youtubeJSON.users[userIndex].message);
+                  firstVideo = latestVideo.items[k].id.videoId;
+                  continue;
+                } else if ((k + 1) == latestVideo.items.length) {
+                  console.log("Sending an alert for the last video in the list.\nTitle: " + latestVideo.items[k].snippet.title +
+                    "\nURL: " + latestVideo.items[k].id.videoId + "\nUpdating JSON to show most recent video.");
+                  sendYoutube(latestVideo.items[k].snippet.title, latestVideo.items[k].id.videoId, youtubeJSON.users[userIndex].webhook_url, youtubeJSON.users[userIndex].message);
+                  lastVideoJSON.users[j].video_id = firstVideo;
+                  videos.push({
+                    title: latestVideo.items[k].snippet.title,
+                    id: latestVideo.items[k].id.videoId
+                  });
+                  fs.writeFileSync("lastvideo.json", JSON.stringify(lastVideoJSON, null, 2));
+                  videos.reverse()
+                  console.log("Video array:\n" + JSON.parse(videos));
+                  break;
+                } else {
+                  console.log("Sending an alert for video titled: " + latestVideo.items[k].snippet.title + "\nURL: " + latestVideo.items[k].id.videoId);
+                  videos.push({
+                    title: latestVideo.items[k].snippet.title,
+                    id: latestVideo.items[k].id.videoId
+                  });
+                  sendYoutube(latestVideo.items[k].snippet.title, latestVideo.items[k].id.videoId, youtubeJSON.users[userIndex].webhook_url, youtubeJSON.users[userIndex].message);
+                  continue;
+                }
+              }
+
+            } else {
+              console.log("Latest video has not changed since last alert.");
+              break;
+            }
+          } else if (j == (lastVideoJSON.users.length - 1) && lastVideoJSON.users[j].id != userID && firstVideo == "") {
+            console.log("Current index: " + j + ", length: " + lastVideoJSON.users.length);
+            console.log("JSON ID: " + lastVideoJSON.users[j].id + ", userID: " + userID);
+            console.log("User does not have a log.\nAssuming latest video is new and populating JSON...");
+            sendYoutube(latestVideo.items[0].snippet.title, latestVideo.items[0].id.videoId, youtubeJSON.users[userIndex].webhook_url, youtubeJSON.users[userIndex].message);
+            lastVideoJSON.users.push({
+              user: youtubeJSON.users[userIndex].user,
+              id: youtubeJSON.users[userIndex].id,
+              video_id: latestVideo.items[0].id.videoId
+            });
+            fs.writeFileSync("lastvideo.json", JSON.stringify(lastVideoJSON, null, 2));
+            break;
+          }
+        }
+      }
+    });
+  });
+  youReq.on('error', (error) => {
+    console.error(error);
+  });
+  youReq.end();
 }
