@@ -234,7 +234,7 @@ router.post('/api/yt', (req, res) => {
   console.log("Refreshing log...");
   lastVideoJSON = JSON.parse(fs.readFileSync("lastvideo.json", "utf8"));
   console.log("Log refreshed.")
-  //console.log(req.body);
+  console.log(req.body);
   res.status(200).send();
   if (req.body.feed['at:deleted-entry'] != undefined) {
     console.log("Deleted video alert, ignore.");
@@ -355,9 +355,9 @@ router.post('/api', (req, res) => {
               lastGame = lastStream.users[j].game;
               lastStreamTimestamp = lastStream.users[j].timestamp;
               isNewUser = false;
-              if(lastStream.users[j].status == "live"){
+              if (lastStream.users[j].status == "live") {
                 isOffline = false;
-              }else if (lastStream.users[j].status == "offline"){
+              } else if (lastStream.users[j].status == "offline") {
                 isOffline = true;
               }
               break;
@@ -380,51 +380,51 @@ router.post('/api', (req, res) => {
           console.log((streamDiff / 36e5).toFixed(2) + " hours since last alert.");
           console.log("Is new user? " + isNewUser);
           console.log("Is offline? " + isOffline);
-        if ((streamDiff > 0.5 * 36e5 || isNewUser) && isOffline) {
-          console.log("New stream");
-          sendToBot(user_name, gameName, title, longDate, "new stream", date, start_time.toLocaleString('default', {
-            hour: '2-digit'
-          }), lastStream, currentIndex, startTime, isNewUser);
-          res.status(200).send();
-        } else if (lastGame != gameName) {
-          console.log("New game");
-          sendToBot(user_name, gameName, title, longDate, "new game", date, start_time.toLocaleString('default', {
-            hour: '2-digit'
-          }), lastStream, currentIndex, startTime, isNewUser);
-          res.status(200).send();
-        } else {
-          if (!isOffline) {
-            console.log(user_name + " is still online.\nIgnoring alert");
+          if ((streamDiff > 0.5 * 36e5 || isNewUser) && isOffline) {
+            console.log("New stream");
+            sendToBot(user_name, gameName, title, longDate, "new stream", date, start_time.toLocaleString('default', {
+              hour: '2-digit'
+            }), lastStream, currentIndex, startTime, isNewUser);
+            res.status(200).send();
+          } else if (lastGame != gameName) {
+            console.log("New game");
+            sendToBot(user_name, gameName, title, longDate, "new game", date, start_time.toLocaleString('default', {
+              hour: '2-digit'
+            }), lastStream, currentIndex, startTime, isNewUser);
             res.status(200).send();
           } else {
-            console.log("Resetting user status to live.");
+            if (!isOffline) {
+              console.log(user_name + " is still online.\nIgnoring alert");
+              res.status(200).send();
+            } else {
+              console.log("Resetting user status to live.");
+              lastStream.users[currentIndex].status = "live";
+              lastStream.users[currentIndex].timestamp = startTime;
+              newLastStreamString = JSON.stringify(lastStream, null, 2);
+              //console.log(newLastStreamString);
+              fs.writeFileSync("laststream.json", newLastStreamString);
+              res.status(200).send();
+            }
+          }
+        } else {
+          console.log("Twitch sent a weird alert, timestamp is somehow before the stream's last status update.");
+          if (lastStream.users[currentIndex].status == "offline") {
+            console.log("User is marked as offline.\nResetting user status to live.");
             lastStream.users[currentIndex].status = "live";
             lastStream.users[currentIndex].timestamp = startTime;
-            newLastStreamString = JSON.stringify(lastStream, null, 2);
-            //console.log(newLastStreamString);
-            fs.writeFileSync("laststream.json", newLastStreamString);
-            res.status(200).send();
+            lastStreamString = JSON.stringify(lastStream, null, 2);
+            fs.writeFileSync("laststream.json", lastStreamString);
+          } else if (lastGame != gameName) {
+            console.log("Game has changed, sending new alert.");
+            sendToBot(user_name, gameName, title, longDate, "new game", date, start_time.toLocaleString('default', {
+              hour: '2-digit'
+            }), lastStream, currentIndex, startTime, isNewUser);
+          } else {
+            console.log(user_name + " is already live.\nIgnoring alert.");
           }
-        }
-      }else{
-        console.log("Twitch sent a weird alert, timestamp is somehow before the stream's last status update.");
-        if (lastStream.users[currentIndex].status == "offline") {
-          console.log("User is marked as offline.\nResetting user status to live.");
-          lastStream.users[currentIndex].status = "live";
-          lastStream.users[currentIndex].timestamp = startTime;
-          lastStreamString = JSON.stringify(lastStream, null, 2);
-          fs.writeFileSync("laststream.json", lastStreamString);
-        } else if (lastGame != gameName) {
-          console.log("Game has changed, sending new alert.");
-          sendToBot(user_name, gameName, title, longDate, "new game", date, start_time.toLocaleString('default', {
-            hour: '2-digit'
-          }), lastStream, currentIndex, startTime, isNewUser);
-        } else {
-          console.log(user_name + " is already live.\nIgnoring alert.");
-        }
-        res.status(200).send();
+          res.status(200).send();
 
-      }
+        }
       } else {
         var options = {
           hostname: 'api.twitch.tv',
@@ -501,9 +501,9 @@ router.post('/api', (req, res) => {
                   lastGame = lastStream.users[j].game;
                   lastStreamTimestamp = lastStream.users[j].timestamp;
                   isNewUser = false;
-                  if(lastStream.users[j].status == "live"){
+                  if (lastStream.users[j].status == "live") {
                     isOffline = false;
-                  }else if (lastStream.users[j].status == "offline"){
+                  } else if (lastStream.users[j].status == "offline") {
                     isOffline = true;
                   }
                   break;
@@ -526,49 +526,49 @@ router.post('/api', (req, res) => {
               console.log((streamDiff / 36e5).toFixed(2) + " hours since last alert.");
               console.log("Is new user? " + isNewUser);
               console.log("Is offline? " + isOffline);
-            if ((streamDiff > 1 * 36e5 || isNewUser) && isOffline) {
-              console.log("New stream");
-              sendToBot(user_name, gameName, title, longDate, "new stream", date, start_time.toLocaleString('default', {
-                hour: '2-digit'
-              }), lastStream, currentIndex, startTime, isNewUser);
-              res.status(200).send();
-            } else if (lastGame != gameName) {
-              console.log("New game");
-              sendToBot(user_name, gameName, title, longDate, "new game", date, start_time.toLocaleString('default', {
-                hour: '2-digit'
-              }), lastStream, currentIndex, startTime, isNewUser);
-              res.status(200).send();
-            } else {
-              if (!isOffline) {
-                console.log(user_name + " is still online.\nIgnoring alert");
+              if ((streamDiff > 1 * 36e5 || isNewUser) && isOffline) {
+                console.log("New stream");
+                sendToBot(user_name, gameName, title, longDate, "new stream", date, start_time.toLocaleString('default', {
+                  hour: '2-digit'
+                }), lastStream, currentIndex, startTime, isNewUser);
+                res.status(200).send();
+              } else if (lastGame != gameName) {
+                console.log("New game");
+                sendToBot(user_name, gameName, title, longDate, "new game", date, start_time.toLocaleString('default', {
+                  hour: '2-digit'
+                }), lastStream, currentIndex, startTime, isNewUser);
                 res.status(200).send();
               } else {
-                console.log("Resetting user status to live.");
-                lastStream.users[currentIndex].status = "live";
-                newLastStreamString = JSON.stringify(lastStream, null, 2);
-                //console.log(newLastStreamString);
-                fs.writeFileSync("laststream.json", newLastStreamString);
-                res.status(200).send();
+                if (!isOffline) {
+                  console.log(user_name + " is still online.\nIgnoring alert");
+                  res.status(200).send();
+                } else {
+                  console.log("Resetting user status to live.");
+                  lastStream.users[currentIndex].status = "live";
+                  newLastStreamString = JSON.stringify(lastStream, null, 2);
+                  //console.log(newLastStreamString);
+                  fs.writeFileSync("laststream.json", newLastStreamString);
+                  res.status(200).send();
+                }
               }
-            }
-          }else{
-            console.log("Twitch sent a weird alert, timestamp is somehow before the stream's last status update.");
-            if (lastStream.users[currentIndex].status == "offline") {
-              console.log("User is marked as offline.\nResetting user status to live.");
-              lastStream.users[currentIndex].status = "live";
-              lastStreamString = JSON.stringify(lastStream, null, 2);
-              fs.writeFileSync("laststream.json", lastStreamString);
-            } else if (lastGame != gameName) {
-              console.log("Game has changed, sending new alert.");
-              sendToBot(user_name, gameName, title, longDate, "new game", date, start_time.toLocaleString('default', {
-                hour: '2-digit'
-              }), lastStream, currentIndex, startTime, isNewUser);
             } else {
-              console.log(user_name + " is already live.\nIgnoring alert.");
-            }
-            res.status(200).send();
+              console.log("Twitch sent a weird alert, timestamp is somehow before the stream's last status update.");
+              if (lastStream.users[currentIndex].status == "offline") {
+                console.log("User is marked as offline.\nResetting user status to live.");
+                lastStream.users[currentIndex].status = "live";
+                lastStreamString = JSON.stringify(lastStream, null, 2);
+                fs.writeFileSync("laststream.json", lastStreamString);
+              } else if (lastGame != gameName) {
+                console.log("Game has changed, sending new alert.");
+                sendToBot(user_name, gameName, title, longDate, "new game", date, start_time.toLocaleString('default', {
+                  hour: '2-digit'
+                }), lastStream, currentIndex, startTime, isNewUser);
+              } else {
+                console.log(user_name + " is already live.\nIgnoring alert.");
+              }
+              res.status(200).send();
 
-          }
+            }
           });
         });
         gameReq.on('error', (error) => {
@@ -619,11 +619,13 @@ router.post('/api', (req, res) => {
 
 });
 
+
 app.use("/", router);
 
 //GET anything else
 app.use('*', (req, res) => {
-  res.status(404).send("Resource not found.");
+  //res.status(404).send("Page not found.<br>Please check the URL and try again.");
+  res.status(404).send();
 });
 // Starting both http & https servers
 const httpServer = http.createServer(app);
@@ -775,7 +777,7 @@ router.get('/api/status/:userName', (req, res) => {
       console.log(req.params.userName + " is not in users.json");
       res.status(404).send("<!DOCTYPE html><html><head><title>Unregistered user</title></head><body>" +
         req.params.userName + " is not registered with this API.<br>Please contact " +
-        "<a href=\"mailto:admin@tene.dev\">admin@tene.dev</a> if you would like to fix that.</body></html>");
+        "<a href=\"mailto:contact@tene.dev\">admin@tene.dev</a> or fill out <a href=\"/contact\">this form</a> if you would like to fix that.</body></html>");
     }
   }
 });
@@ -785,7 +787,7 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
   var message;
   var imgurURL = "";
   //console.log("Full timestamp: "+ fullTimeStamp );
-  //console.log("Start time: " + startTime);
+  console.log("Start time: " + startTime);
   //console.log("Short date: " + shortDate);
   //console.log(usersJSONInput);
   //console.log(usersJSON);
@@ -987,9 +989,9 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
 
 }
 
-function sendYoutube(title, videoId, webhookUrl, message){
+function sendYoutube(title, videoId, webhookUrl, message) {
   data = JSON.stringify({
-    content: message + "**" + title  + "** https://youtu.be/" + videoId
+    content: message + "**" + title + "** https://youtu.be/" + videoId
   });
   console.log(data);
   youBotOptions = {
