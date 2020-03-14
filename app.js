@@ -635,6 +635,35 @@ httpsServer.listen(443, () => {
   console.log('HTTPS Server running on port 443');
 });
 
+//get status index
+router.get('/api/status', (req, res) => {
+  if (fs.existsSync("laststream.json")) {
+    lastStreamJSON = JSON.parse(fs.readFileSync("laststream.json", "utf8"));
+    //console.log(lastStreamJSON);
+  } else {
+    console.log("laststream.json does not exist.");
+  }
+  tableString = "<div id=\"indextable\" class=\"table\"><table><tr><th>User</th><th>Status</th><th>Game</th></tr>";
+  for (var k = 0; k < lastStreamJSON.users.length; k++) {
+    tableString += "<tr><td><a href=\"/api/status/" + lastStreamJSON.users[k].user_name +
+      "\">" + lastStreamJSON.users[k].user_name + "</a></td><td>" +
+      lastStreamJSON.users[k].status.charAt(0).toUpperCase() +
+      lastStreamJSON.users[k].status.slice(1) + "</td><td>";
+    /*if(lastStreamJSON.users[k].status == "offline"){
+      tableString += "N/A";
+    }else{
+      */
+    tableString += lastStreamJSON.users[k].game;
+    /*
+    }
+    */
+    tableString += "</td></tr>";
+  }
+  tableString += "</table></div>";
+  res.status(200).send("<html><head>" + htmlMeta + "<link href=\"/css/status.css\" rel=\"stylesheet\"><title>" +
+    "Twitch Index</title></head><body>" + tableString + kofiHTML + "</body></html>");
+})
+
 //get user status
 router.get('/api/status/:userName', (req, res) => {
   //console.log("Outputting status for " + req.params.userName);
