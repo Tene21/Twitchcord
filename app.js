@@ -866,7 +866,16 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
         message = usersJSON.users[i].stream_message;
         gameChangedCount = 0;
       }
+      console.log("Show timestamp? " + usersJSON.users[i].show_timestamp);
+      console.log("Start time: " + startTime);
       //console.log("Thumbnail URL: " + thumbnailURL);
+      if (usersJSON.users[i].show_timestamp == false) {
+        changeLong = "";
+      }else{
+        if(reason == "new stream"){
+          changeLong = startTime;
+        }
+      }
       if (gameName == null) {
         data = JSON.stringify({
           content: message,
@@ -885,7 +894,7 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
               url: thumbnailURL
             },
             footer: {
-              text: startTime
+              text: changeLong
             }
           }]
         });
@@ -912,10 +921,11 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
               url: thumbnailURL
             },
             footer: {
-              text: startTime
+              text: changeLong
             }
           }]
         });
+
       }
       //console.log(data);
       botOptions = {
