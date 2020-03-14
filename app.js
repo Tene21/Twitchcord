@@ -711,7 +711,7 @@ router.get('/api/status/:userName', (req, res) => {
           }
           //console.log(outputString);
           currentStatus = "<div id=\"currentstatus\">" + outputString + "</div>"
-          tableString = "<div id=\"indextable\" class=\"table\"><table><tr><th>User</th><th>Status</th><th>Game</th><th>Preview</th></tr>";
+          tableString = "<div id=\"indextable\" class=\"table\"><table><tr><th>User</th><th>Status</th><th>Game</th></tr>";
           for (var k = 0; k < lastStreamJSON.users.length; k++) {
             tableString += "<tr><td><a href=\"/api/status/" + lastStreamJSON.users[k].user_name +
               "\">" + lastStreamJSON.users[k].user_name + "</a></td><td>" +
@@ -725,24 +725,7 @@ router.get('/api/status/:userName', (req, res) => {
             /*
             }
             */
-            tableString += "</td><td><a href=\"http://twitch.tv/" + lastStreamJSON.users[k].user_name.toLowerCase() + "\"><img src=";
-            if (lastStreamJSON.users[k].status == "offline") {
-              for (var l = 0; l < usersJSON.users.length; l++) {
-                if (usersJSON.users[l].user_name == lastStreamJSON.users[k].user_name && usersJSON.users[l].user_id != "duplicate_user") {
-                  if (usersJSON.users[l].offline_image != "") {
-                    tableString += usersJSON.users[l].offline_image;
-                  } else {
-                    tableString += "https://static-cdn.jtvnw.net/ttv-static/404_preview-640x360.jpg";
-                  }
-                }
-              }
-            } else {
-              tableString += "https://static-cdn.jtvnw.net/previews-ttv/live_user_" +
-                lastStreamJSON.users[k].user_name.toLowerCase() + "-640x360.jpg?random=" +
-                Math.floor(100000 + Math.random() * 900000);
-            }
-
-            tableString += " width=150 height=85></td></a></tr>";
+            tableString += "</td></tr>";
           }
           tableString += "</table></div>";
           //console.log(tableString);
