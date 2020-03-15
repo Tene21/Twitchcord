@@ -155,7 +155,10 @@ app.use(bodyParser.xml({
     explicitArray: false
   }
 }));
-app.use(bodyParser.raw());
+//app.use(bodyParser.raw());
+app.use(bodyParser.urlencoded({
+  extended: true
+}));
 
 router.use(function(req, res, next) {
   //console.log("/" + req.method + " to " + req.originalUrl + " at " + Date(Date.now()).toString());
