@@ -2,7 +2,6 @@
 const fs = require('fs');
 const http = require('http');
 const https = require('https');
-const imgur = require('imgur');
 const express = require('express');
 const xhub = require('express-x-hub');
 const bodyParser = require('body-parser');
