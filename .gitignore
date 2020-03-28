@@ -5,6 +5,7 @@ npm-debug.log*
 
 # Generated JSON files
 *.json
+!package.json
 
 # PM2 save
 *.*.save
