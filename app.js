@@ -633,8 +633,8 @@ app.use('*', (req, res) => {
 const httpServer = http.createServer(app);
 const httpsServer = https.createServer(credentials, app);
 
-httpServer.listen(3000, () => {
-  console.log('HTTP Server running on port 3000');
+httpServer.listen(80, () => {
+  console.log('HTTP Server running on port 80');
 });
 
 httpsServer.listen(443, () => {
