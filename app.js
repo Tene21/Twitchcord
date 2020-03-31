@@ -39,6 +39,10 @@ var youtubeString = JSON.stringify(youtubeJSONInput);
 var lastVideoJSON = JSON.parse(fs.readFileSync("lastvideo.json", "utf8"));
 var usersJSONInput = fs.readFileSync("users.json", "utf8");
 var usersJSON = JSON.parse(usersJSONInput);
+var apiKeys = JSON.parse(fs.readFileSync("apikeys.json", "utf8"));
+var clientIDNew = apiKeys.client_id;
+var clientSecretNew = apiKeys.client_secret;
+var oAuthKey = apiKeys.oauth_key;
 
 //sleep function
 const sleep = (milliseconds) => {
@@ -47,60 +51,85 @@ const sleep = (milliseconds) => {
 
 //automatically refresh topic subscriptions every day at midnight
 var j = schedule.scheduleJob('0 0 * * *', function() {
-  console.log("Refreshing Twitch subscriptions...");
-  console.log("Checking for changes in users.JSON...");
-  newUsersJSONInput = fs.readFileSync("users.json", "utf8");
-  if (newUsersJSONInput != usersJSONInput) {
-    console.log("users.JSON has been modified. Loading new users.JSON...");
-    usersJSONInput = newUsersJSONInput;
-    usersJSON = JSON.parse(newUsersJSONInput);
-    console.log("users.JSON loaded.");
-  } else {
-    console.log("No changes detected.");
+  //get a new oauth key just in case
+  console.log("Obtaining a new oauth key...");
+  oauthOptions = {
+    hostname: 'id.twitch.tv',
+    path: '/oauth2/token?client_id=' + clientIDNew +
+    '&client_secret=' + clientSecretNew + '&grant_type=client_credentials',
+    method: 'POST'
   }
-  //console.log("usersJSON:");
-  //console.log(usersJSON);
-  for (let i = 0; i < usersJSON.users.length; i++) {
-    let currentUser = usersJSON.users[i].user_name;
-    console.log("Refreshing Twitch subscription for " + currentUser + "...");
-    if (usersJSON.users[i].user_id == "duplicate_user") {
-      console.log("Duplicate user doesn't need refreshed.");
-      continue;
-    }
-    var userID = usersJSON.users[i].user_id;
-    var refreshHeaders = {
-      'Content-Type': 'application/json',
-      'Client-ID': clientID
-    };
-    var refreshJSON = JSON.stringify({
-      'hub.callback': 'http://www.tene.dev/api',
-      'hub.mode': 'subscribe',
-      'hub.topic': 'https://api.twitch.tv/helix/streams?user_id=' + usersJSON.users[i].user_id,
-      'hub.lease_seconds': 86405,
-      'hub.secret': clientSecret
+  oauthReq = https.request(oauthOptions, (oauthRes) => {
+    let oAuthData = '';
+    oauthRes.on('data', d => {
+      oAuthData += d;
     });
-    var refreshData = JSON.stringify(refreshJSON);
-    refreshOptions = {
-      hostname: 'api.twitch.tv',
-      path: '/helix/webhooks/hub',
-      method: 'POST',
-      headers: refreshHeaders
-    }
-    //console.log(refreshOptions);
-    refreshReq = https.request(refreshOptions, (refreshRes) => {
-      refreshRes.on('data', d => {
-        process.stdout.write(d)
-      });
-      refreshRes.on('end', function() {
-        console.log("Twitch subscription for " + currentUser + " refreshed.");
-      })
-      refreshReq.on('error', error => {
-        console.error(error)
-      });
+    oauthRes.on('end', () => {
+      //console.log(oAuthData);
+      oauthResponse = JSON.parse(oAuthData);
+      oAuthKey = oauthResponse.access_token;
+      apiKeys.oauth_key = oAuthKey;
+      apiKeysString = JSON.stringify(apiKeys, null, 2);
+      fs.writeFileSync("apikeys.json", apiKeysString);
+      console.log("Refreshing Twitch subscriptions...");
+      console.log("Checking for changes in users.JSON...");
+      newUsersJSONInput = fs.readFileSync("users.json", "utf8");
+      if (newUsersJSONInput != usersJSONInput) {
+        console.log("users.JSON has been modified. Loading new users.JSON...");
+        usersJSONInput = newUsersJSONInput;
+        usersJSON = JSON.parse(newUsersJSONInput);
+        console.log("users.JSON loaded.");
+      } else {
+        console.log("No changes detected.");
+      }
+      //console.log("usersJSON:");
+      //console.log(usersJSON);
+      for (let i = 0; i < usersJSON.users.length; i++) {
+        let currentUser = usersJSON.users[i].user_name;
+        console.log("Refreshing Twitch subscription for " + currentUser + "...");
+        if (usersJSON.users[i].user_id == "duplicate_user") {
+          console.log("Duplicate user doesn't need refreshed.");
+          continue;
+        }
+        var userID = usersJSON.users[i].user_id;
+        var refreshHeaders = {
+          'Content-Type': 'application/json',
+          'Client-ID': clientID,
+          'Authorization': 'Bearer ' + oAuthKey
+        };
+        var refreshJSON = JSON.stringify({
+          'hub.callback': 'http://www.tene.dev/api',
+          'hub.mode': 'subscribe',
+          'hub.topic': 'https://api.twitch.tv/helix/streams?user_id=' + usersJSON.users[i].user_id,
+          'hub.lease_seconds': 86405,
+          'hub.secret': clientSecret
+        });
+        var refreshData = JSON.stringify(refreshJSON);
+        refreshOptions = {
+          hostname: 'api.twitch.tv',
+          path: '/helix/webhooks/hub',
+          method: 'POST',
+          headers: refreshHeaders
+        }
+        //console.log(refreshOptions);
+        refreshReq = https.request(refreshOptions, (refreshRes) => {
+          refreshRes.on('data', d => {
+            process.stdout.write(d)
+          });
+          refreshRes.on('end', function() {
+            console.log("Twitch subscription for " + currentUser + " refreshed.");
+          })
+          refreshReq.on('error', error => {
+            console.error(error)
+          });
+        });
+        refreshReq.write(refreshJSON);
+        refreshReq.end();
+      }
     });
-    refreshReq.write(refreshJSON);
-    refreshReq.end();
-  }
+
+  })
+  oauthReq.end();
   console.log("Checking for changes in youtubeusers.json");
   newYoutubeJSONInput = fs.readFileSync("youtubeusers.json", "utf8");
   if (newYoutubeJSONInput != youtubeJSONInput) {
