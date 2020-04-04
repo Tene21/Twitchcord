@@ -1130,7 +1130,11 @@ const getYTAPI = async (userIndex) => {
             console.log("Current index: " + j + ", length: " + lastVideoJSON.users.length);
             console.log("JSON ID: " + lastVideoJSON.users[j].id + ", userID: " + userID);
             console.log("User does not have a log.\nAssuming latest video is new and populating JSON...");
-            sendYoutube(latestVideo.items[0].snippet.title, latestVideo.items[0].id.videoId, youtubeJSON.users[userIndex].webhook_url, youtubeJSON.users[userIndex].message);
+            videos.push({
+              title: latestVideo.items[0].snippet.title,
+              id: latestVideo.items[0].id.videoId
+            });
+            sendYoutube(videos, youtubeJSON.users[userIndex].webhook_url, youtubeJSON.users[userIndex].message);
             lastVideoJSON.users.push({
               user: youtubeJSON.users[userIndex].user,
               id: youtubeJSON.users[userIndex].id,
