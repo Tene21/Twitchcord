@@ -207,10 +207,10 @@ router.use(function(req, res, next) {
 //TODO: maybe add a function in GET to add new users to users.json
 
 //GET homepage
-router.get('/', function(req, res) {
-  console.log("Oh hey, someone's checking out the homepage");
-  if (fs.existsSync(htmlPath + 'index.html')) {
-    res.sendFile(htmlPath + 'index.html');
+router.get('/', (req, res) => {
+  //console.log("Oh hey, someone's checking out the homepage");
+  if (fs.existsSync(htmlPath + 'indexpage.html')) {
+    res.sendFile(htmlPath + 'indexpage.html');
   } else {
     res.status(404).send("<html><head><title>No HTML provided</title></head><body>" +
       "This server has not been provided a HTML file to serve. Please contact the webmaster.</body></html>");
