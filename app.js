@@ -450,8 +450,9 @@ router.post('/api', (req, res) => {
           }
         } else {
           console.log("Twitch sent a weird alert, timestamp is somehow before the stream's last status update.");
-          if (lastStream.users[currentIndex].status == "offline") {
+          if (lastStream.users[currentIndex].status == "offline" && gameName == lastGame) {
             console.log("User is marked as offline.\nResetting user status to live.");
+            console.log("Resetting start time to " + startTime);
             lastStream.users[currentIndex].status = "live";
             lastStream.users[currentIndex].timestamp = startTime;
             lastStreamString = JSON.stringify(lastStream, null, 2);
@@ -595,9 +596,11 @@ router.post('/api', (req, res) => {
               }
             } else {
               console.log("Twitch sent a weird alert, timestamp is somehow before the stream's last status update.");
-              if (lastStream.users[currentIndex].status == "offline") {
+              if (lastStream.users[currentIndex].status == "offline" && gameName == lastGame) {
                 console.log("User is marked as offline.\nResetting user status to live.");
+                console.log("Resetting start time to " + startTime);
                 lastStream.users[currentIndex].status = "live";
+                lastStream.users[currentIndex].timestamp = startTime;
                 lastStreamString = JSON.stringify(lastStream, null, 2);
                 fs.writeFileSync("laststream.json", lastStreamString);
               } else if (lastGame != gameName) {
