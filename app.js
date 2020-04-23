@@ -195,7 +195,13 @@ app.use(bodyParser.urlencoded({
 
 router.use(function(req, res, next) {
   //console.log("/" + req.method + " to " + req.originalUrl + " at " + Date(Date.now()).toString());
-  next();
+  if(!req.secure){
+    //console.log(req);
+    res.redirect("https://" + req.headers.host + req.originalUrl);
+  } else {
+    next();
+  }
+
 });
 
 //TODO: maybe add a function in GET to add new users to users.json
