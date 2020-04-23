@@ -897,7 +897,7 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
           }) + ", " + changeStamp.toLocaleString('default', {
             year: 'numeric'
           }) + " at " + strTime;
-          console.log(userName + " has changed games " + gameChangedCount + " times this stream.\nLast game change was at " + changeLong);
+          console.log(userName + " has changed games " + gameChangedCount + " times this stream.\nNow playing " + gameName + "\nLast game change was at " + changeLong);
           if (usersJSON.users[i].game_message.includes("<game>")) {
             if(gameName == null){
               message = usersJSON.users[i].game_message.replace("<game>", "something else");
