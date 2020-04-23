@@ -1034,30 +1034,33 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
 
 }
 
-function sendYoutube(title, videoId, webhookUrl, message) {
-  data = JSON.stringify({
-    content: message + "**" + title + "** https://youtu.be/" + videoId
-  });
-  console.log(data);
-  youBotOptions = {
-    hostname: 'discordapp.com',
-    path: webhookUrl,
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    }
-  }
-
-  youBotReq = https.request(youBotOptions, youBotRes => {
-    youBotRes.on('data', d => {
-      process.stdout.write(d)
+const sendYoutube = async (videoArray, webhookUrl, message) => {
+  await sleep(30000);
+  for(i = 0; i < videoArray.length; i++){
+    data = JSON.stringify({
+      content: message + "**" + videoArray[i].title + "** https://youtu.be/" + videoArray[i].id
     });
-  });
-  youBotReq.on('error', error => {
-    console.error(error)
-  });
-  youBotReq.write(data);
-  youBotReq.end();
+    console.log(data);
+    youBotOptions = {
+      hostname: 'discordapp.com',
+      path: webhookUrl,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    }
+
+    youBotReq = https.request(youBotOptions, youBotRes => {
+      youBotRes.on('data', d => {
+        process.stdout.write(d)
+      });
+    });
+    youBotReq.on('error', error => {
+      console.error(error)
+    });
+    youBotReq.write(data);
+    youBotReq.end();
+  }
 }
 
 const getYTAPI = async (userIndex) => {
@@ -1098,40 +1101,40 @@ const getYTAPI = async (userIndex) => {
                     console.log("Updating JSON to show most recent video.");
                     lastVideoJSON.users[j].video_id = firstVideo;
                     fs.writeFileSync("lastvideo.json", JSON.stringify(lastVideoJSON, null, 2));
-                    videos.reverse()
+                    //videos.reverse()
                     console.log("Video array:\n" + JSON.stringify(videos));
+                    sendYoutube(videos, youtubeJSON.users[userIndex].webhook_url, youtubeJSON.users[userIndex].message);
                   }
                   break;
                 } else if (k == 0) {
-                  console.log("Sending an alert for the first video in the list.\nTitle: " + latestVideo.items[k].snippet.title +
+                  console.log("Logging the first video in the list.\nTitle: " + latestVideo.items[k].snippet.title +
                     "\nURL: " + latestVideo.items[k].id.videoId + "\nMarking this as the most recent video.");
                     videos.push({
                       title: latestVideo.items[k].snippet.title,
                       id: latestVideo.items[k].id.videoId
                     });
-                  sendYoutube(latestVideo.items[k].snippet.title, latestVideo.items[k].id.videoId, youtubeJSON.users[userIndex].webhook_url, youtubeJSON.users[userIndex].message);
                   firstVideo = latestVideo.items[k].id.videoId;
                   continue;
                 } else if ((k + 1) == latestVideo.items.length) {
-                  console.log("Sending an alert for the last video in the list.\nTitle: " + latestVideo.items[k].snippet.title +
+                  console.log("Logging the last video in the list.\nTitle: " + latestVideo.items[k].snippet.title +
                     "\nURL: " + latestVideo.items[k].id.videoId + "\nUpdating JSON to show most recent video.");
-                  sendYoutube(latestVideo.items[k].snippet.title, latestVideo.items[k].id.videoId, youtubeJSON.users[userIndex].webhook_url, youtubeJSON.users[userIndex].message);
                   lastVideoJSON.users[j].video_id = firstVideo;
+                  fs.writeFileSync("lastvideo.json", JSON.stringify(lastVideoJSON, null, 2));
                   videos.push({
                     title: latestVideo.items[k].snippet.title,
                     id: latestVideo.items[k].id.videoId
                   });
-                  fs.writeFileSync("lastvideo.json", JSON.stringify(lastVideoJSON, null, 2));
-                  videos.reverse()
+                  //videos.reverse()
                   console.log("Video array:\n" + JSON.parse(videos));
+                  sendYoutube(videos, youtubeJSON.users[userIndex].webhook_url, youtubeJSON.users[userIndex].message);
+
                   break;
                 } else {
-                  console.log("Sending an alert for video titled: " + latestVideo.items[k].snippet.title + "\nURL: " + latestVideo.items[k].id.videoId);
+                  console.log("Logging a video titled: " + latestVideo.items[k].snippet.title + "\nURL: " + latestVideo.items[k].id.videoId);
                   videos.push({
                     title: latestVideo.items[k].snippet.title,
                     id: latestVideo.items[k].id.videoId
                   });
-                  sendYoutube(latestVideo.items[k].snippet.title, latestVideo.items[k].id.videoId, youtubeJSON.users[userIndex].webhook_url, youtubeJSON.users[userIndex].message);
                   continue;
                 }
               }
