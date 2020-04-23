@@ -900,7 +900,7 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
           console.log(userName + " has changed games " + gameChangedCount + " times this stream.\nNow playing " + gameName + "\nLast game change was at " + changeLong);
           if (usersJSON.users[i].game_message.includes("<game>")) {
             if(gameName == null){
-              message = usersJSON.users[i].game_message.replace("<game>", "something else");
+              message = usersJSON.users[i].game_message.replace("<game>", "Unlisted");
             }else{
               message = usersJSON.users[i].game_message.replace("<game>", gameName);
             }
