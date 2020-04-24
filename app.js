@@ -100,7 +100,7 @@ var j = schedule.scheduleJob('0 0 * * *', function() {
             'Authorization': 'Bearer ' + oAuthKey
           };
           var refreshJSON = JSON.stringify({
-            'hub.callback': 'http://www.tene.dev/api',
+            'hub.callback': 'https://www.tene.dev/api',
             'hub.mode': 'subscribe',
             'hub.topic': 'https://api.twitch.tv/helix/streams?user_id=' + usersJSON.users[i].user_id,
             'hub.lease_seconds': 86405,
@@ -153,7 +153,7 @@ var j = schedule.scheduleJob('0 0 * * *', function() {
     var userID = youtubeJSON.users[i].id;
 
     var refreshBody = new FormData();
-    refreshBody.append("hub.callback", "http://www.tene.dev/api/yt");
+    refreshBody.append("hub.callback", "https://www.tene.dev/api/yt");
     refreshBody.append("hub.mode", "subscribe");
     refreshBody.append("hub.topic", "https://www.youtube.com/xml/feeds/videos.xml?channel_id=" + userID);
     refreshBody.append("hub.lease_seconds", 86405);
