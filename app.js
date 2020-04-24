@@ -195,7 +195,7 @@ app.use(bodyParser.urlencoded({
 
 router.use(function(req, res, next) {
   //console.log("/" + req.method + " to " + req.originalUrl + " at " + Date(Date.now()).toString());
-  if(!req.secure){
+  if(!req.secure && req.headers.host != "localhost"){
     //console.log(req);
     res.redirect("https://" + req.headers.host + req.originalUrl);
   } else {
