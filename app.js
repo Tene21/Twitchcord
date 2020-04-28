@@ -832,7 +832,7 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
   var message;
   var imgurURL = "";
   //console.log("Full timestamp: "+ fullTimeStamp );
-  console.log("Start time: " + startTime);
+  //console.log("Start time: " + startTime);
   //console.log("Short date: " + shortDate);
   //console.log(usersJSONInput);
   //console.log(usersJSON);
@@ -913,8 +913,8 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
         message = usersJSON.users[i].stream_message;
         gameChangedCount = 0;
       }
-      console.log("Show timestamp? " + usersJSON.users[i].show_timestamp);
-      console.log("Start time: " + startTime);
+      //console.log("Show timestamp? " + usersJSON.users[i].show_timestamp);
+      //console.log("Start time: " + startTime);
       //console.log("Thumbnail URL: " + thumbnailURL);
       if (usersJSON.users[i].show_timestamp == false) {
         changeLong = "";
