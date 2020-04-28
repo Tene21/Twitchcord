@@ -204,7 +204,7 @@ router.use(function(req, res, next) {
 
 });
 
-//TODO: maybe add a function in GET to add new users to users.json
+
 
 //GET homepage
 router.get('/', (req, res) => {
@@ -846,7 +846,7 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
     //console.log("Checking index " + (i + 1) + " for user " + userName);
     //console.log("Comparing " + userName + " to " + usersJSON.users[i].user_name);
     if (usersJSON.users[i].user_name == userName) {
-      if (found == false) {
+      if (!found) {
         console.log(userName + " is in users.json");
         found = true;
       } else {
@@ -916,7 +916,7 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
       //console.log("Show timestamp? " + usersJSON.users[i].show_timestamp);
       //console.log("Start time: " + startTime);
       //console.log("Thumbnail URL: " + thumbnailURL);
-      if (usersJSON.users[i].show_timestamp == false) {
+      if (!usersJSON.users[i].show_timestamp) {
         changeLong = "";
       }else{
         if(reason == "new stream"){
