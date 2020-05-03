@@ -493,7 +493,7 @@ router.post('/api', (req, res) => {
             //console.log(start_time);
             //console.log(startTime);
             var time_now = new Date(Date.now());
-            var user_count = json.data[0].viewer_count;
+            //var user_count = json.data[0].viewer_count;
             var hours = start_time.toLocaleString('default', {
               hour: 'numeric'
             });
