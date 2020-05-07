@@ -332,7 +332,8 @@ router.post('/api', (req, res) => {
     json = JSON.parse(stringified);
     if (json.data !== undefined && json.data.length > 0) {
       var gameHeaders = {
-        "Client-ID": clientID
+        "Client-ID": clientID,
+        "Authorization": "Bearer " + oAuthKey
       };
       var gameName;
       var game_id = json.data[0].game_id;
