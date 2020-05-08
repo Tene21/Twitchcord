@@ -484,8 +484,14 @@ router.post('/api', (req, res) => {
           });
           gameRes.on('end', () => {
             gameJSON = JSON.parse(data);
-            //console.log(gameJSON);
-            gameName = gameJSON.data[0].name;
+            if('error' in gameJSON){
+              console.log("Error retrieving game name from Twitch\n" + data.message);
+              gameName = "Unknown"
+            }else if('data' in gameJSON){
+              gameName = gameJSON.data[0].name;
+            }
+            //console.log(data);
+
             //console.log("Game: " + gameName);
             var user_name = json.data[0].user_name;
             var title = json.data[0].title;
