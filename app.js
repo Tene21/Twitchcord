@@ -9,6 +9,7 @@ require('body-parser-xml')(bodyParser);
 const schedule = require('node-schedule');
 const FormData = require('form-data');
 const he = require('he');
+const moment = require("moment-timezone");
 
 
 const app = express();
@@ -377,6 +378,8 @@ router.post('/api', (req, res) => {
         }) + ", " + start_time.toLocaleString('default', {
           year: 'numeric'
         }) + " at " + strTime;
+        momentTest = moment(start_time);
+        momentDate = momentTest.format("MMMM D, YYYY") + " at " + momentTest.format("hh:mmA");
         if (fs.existsSync("laststream.json")) {
           lastStreamJSON = fs.readFileSync("laststream.json", "utf8");
           //console.log(lastStreamJSON);
@@ -427,13 +430,13 @@ router.post('/api', (req, res) => {
             console.log("New stream");
             sendToBot(user_name, gameName, title, longDate, "new stream", date, start_time.toLocaleString('default', {
               hour: '2-digit'
-            }), lastStream, currentIndex, startTime, isNewUser);
+            }), lastStream, currentIndex, startTime, isNewUser, momentTest);
             res.status(200).send();
           } else if (lastGame != gameName) {
             console.log("New game");
             sendToBot(user_name, gameName, title, longDate, "new game", date, start_time.toLocaleString('default', {
               hour: '2-digit'
-            }), lastStream, currentIndex, startTime, isNewUser);
+            }), lastStream, currentIndex, startTime, isNewUser, momentTest);
             res.status(200).send();
           } else {
             if (!isOffline) {
@@ -530,6 +533,8 @@ router.post('/api', (req, res) => {
             }) + ", " + start_time.toLocaleString('default', {
               year: 'numeric'
             }) + " at " + strTime;
+            momentTest = moment(start_time);
+            momentDate = momentTest.format("MMMM D, YYYY") + " at " + momentTest.format("hh:mmA");
             if (fs.existsSync("laststream.json")) {
               lastStreamJSON = fs.readFileSync("laststream.json", "utf8");
               //console.log(lastStreamJSON);
@@ -580,13 +585,13 @@ router.post('/api', (req, res) => {
                 console.log("New stream");
                 sendToBot(user_name, gameName, title, longDate, "new stream", date, start_time.toLocaleString('default', {
                   hour: '2-digit'
-                }), lastStream, currentIndex, startTime, isNewUser);
+                }), lastStream, currentIndex, startTime, isNewUser, momentTest);
                 res.status(200).send();
               } else if (lastGame != gameName) {
                 console.log("New game");
                 sendToBot(user_name, gameName, title, longDate, "new game", date, start_time.toLocaleString('default', {
                   hour: '2-digit'
-                }), lastStream, currentIndex, startTime, isNewUser);
+                }), lastStream, currentIndex, startTime, isNewUser, momentTest);
                 res.status(200).send();
               } else {
                 if (!isOffline) {
@@ -614,7 +619,7 @@ router.post('/api', (req, res) => {
                 console.log("Game has changed, sending new alert.");
                 sendToBot(user_name, gameName, title, longDate, "new game", date, start_time.toLocaleString('default', {
                   hour: '2-digit'
-                }), lastStream, currentIndex, startTime, isNewUser);
+                }), lastStream, currentIndex, startTime, isNewUser, momentTest);
               } else {
                 console.log(user_name + " is already live.\nIgnoring alert.");
               }
@@ -835,7 +840,7 @@ router.get('/api/status/:userName', (req, res) => {
 });
 
 //SEND POST REQUEST TO DISCORD WEBHOOK URL
-function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate, hour, lastStream, jsonIndex, fullTimeStamp, isNewUser) {
+function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate, hour, lastStream, jsonIndex, fullTimeStamp, isNewUser, momentTest) {
   var message;
   var imgurURL = "";
   //console.log("Full timestamp: "+ fullTimeStamp );
@@ -864,7 +869,8 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
       var gameChangedCount;
       var thumbnailURL = "https://static-cdn.jtvnw.net/previews-ttv/live_user_" +
         usersJSON.users[i].internal_id + "-640x360.jpg?" + fullTimeStamp;
-
+      momentTzTest = momentTest.tz(usersJSON.users[i].timezone);
+      console.log("Should output time and zone: " + momentTzTest.format("ha z") + "\nIs DST? " + momentTzTest.isDST());
       if (!isNewUser) {
         if (reason == "new stream") {
           if (usersJSON.users[i].stream_message.includes("<game>")) {
@@ -881,30 +887,10 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
         } else if (reason == "new game") {
           gameChangedCount = lastStreamParsed.users[jsonIndex].game_changed_count;
           gameChangedCount++;
-          var changeStamp = new Date(Date.now());
-          //console.log(changeStamp);
-          var hours = changeStamp.toLocaleString('default', {
-            hour: 'numeric'
-          });
-          var minutes = changeStamp.toLocaleString('default', {
-            minute: '2-digit'
-          });
-          var ampm = hours >= 12 ? 'PM' : 'AM';
-          if (hours != 12) {
-            hours = hours % 12;
-          }
-          hours = hours < 10 ? '0' + hours : hours;
-          minutes = minutes < 10 ? '0' + minutes : minutes;
-          var strTime = hours + ':' + minutes + ampm;
-          var changeLong = changeStamp.toLocaleString('default', {
-            month: 'long',
-            timeZone: 'UTC'
-          }) + " " + changeStamp.toLocaleString('default', {
-            day: '2-digit'
-          }) + ", " + changeStamp.toLocaleString('default', {
-            year: 'numeric'
-          }) + " at " + strTime;
-          console.log(userName + " has changed games " + gameChangedCount + " times this stream.\nNow playing " + gameName + "\nLast game change was at " + changeLong);
+          momentChange = moment();
+          momentChangeFormatted = momentChange.tz(usersJSON.users[i].timezone).format("MMMM D, YYYY") + " at " + momentChange.tz(usersJSON.users[i].timezone).format("hh:mmA");
+          changeLong = momentChangeFormatted;
+          console.log(userName + " has changed games " + gameChangedCount + " times this stream.\nNow playing " + gameName + "\nLast game change was at " + changeLong + momentChange.tz(usersJSON.users[i].timezone).format("z"));
           if (usersJSON.users[i].game_message.includes("<game>")) {
             if(gameName == null){
               message = usersJSON.users[i].game_message.replace("<game>", "Unlisted");
@@ -927,7 +913,7 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
         changeLong = "";
       }else{
         if(reason == "new stream"){
-          changeLong = startTime;
+          changeLong = momentTzTest.format("MMMM D, YYYY") + " at " + momentTzTest.tz(usersJSON.users[i].timezone).format("hh:mmA");
         }
       }
       if (gameName == null) {
