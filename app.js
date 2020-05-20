@@ -725,6 +725,15 @@ router.get('/api/status', (req, res) => {
     "Twitch Index</title></head><body>" + tableString + kofiHTML + "</body></html>");
 })
 
+//letsencrypt challenge
+router.get('/.well-known/acme-challenge/:fileName', (req, res) => {
+  if(fs.existsSync(__dirname + '/.well-known/acme-challenge/' + req.params.fileName)){
+    res.sendFile(__dirname + '/.well-known/acme-challenge/' + req.params.fileName);
+  }else{
+    res.status(404).send();
+  }
+})
+
 //get user status
 router.get('/api/status/:userName', (req, res) => {
   //console.log("Outputting status for " + req.params.userName);
