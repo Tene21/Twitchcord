@@ -454,20 +454,24 @@ router.post('/api', (req, res) => {
           }
         } else {
           console.log("Twitch sent a weird alert, timestamp is somehow before the stream's last status update.");
-          if (lastStream.users[currentIndex].status == "offline" && gameName == lastGame) {
-            console.log("User is marked as offline.\nResetting user status to live.");
-            console.log("Resetting start time to " + startTime);
-            lastStream.users[currentIndex].status = "live";
-            lastStream.users[currentIndex].timestamp = startTime;
-            lastStreamString = JSON.stringify(lastStream, null, 2);
-            fs.writeFileSync("laststream.json", lastStreamString);
-          } else if (lastGame != gameName) {
-            console.log("Game has changed, sending new alert.");
-            sendToBot(user_name, gameName, title, longDate, "new game", date, start_time.toLocaleString('default', {
-              hour: '2-digit'
-            }), lastStream, currentIndex, startTime, isNewUser);
-          } else {
-            console.log(user_name + " is already live.\nIgnoring alert.");
+          if(Math.abs(streamDiff) > 3 * 36e5){
+            console.log("It sent an alert more than three hours prior to the most recent alert\nThat's absurd, so I'm ignoring it.");
+          }else{
+            if (lastStream.users[currentIndex].status == "offline" && gameName == lastGame) {
+              console.log("User is marked as offline.\nResetting user status to live.");
+              console.log("Resetting start time to " + startTime);
+              lastStream.users[currentIndex].status = "live";
+              lastStream.users[currentIndex].timestamp = startTime;
+              lastStreamString = JSON.stringify(lastStream, null, 2);
+              fs.writeFileSync("laststream.json", lastStreamString);
+            } else if (lastGame != gameName) {
+              console.log("Game has changed, sending new alert.");
+              sendToBot(user_name, gameName, title, longDate, "new game", date, start_time.toLocaleString('default', {
+                hour: '2-digit'
+              }), lastStream, currentIndex, startTime, isNewUser, momentTest);
+            } else {
+              console.log(user_name + " is already live.\nIgnoring alert.");
+            }
           }
           res.status(200).send();
 
