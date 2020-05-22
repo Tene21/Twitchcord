@@ -1041,7 +1041,6 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
 }
 
 const sendYoutube = async (videoArray, webhookUrl, message) => {
-  await sleep(30000);
   for(i = 0; i < videoArray.length; i++){
     data = JSON.stringify({
       content: message + "**" + videoArray[i].title + "** https://youtu.be/" + videoArray[i].id
@@ -1066,6 +1065,7 @@ const sendYoutube = async (videoArray, webhookUrl, message) => {
     });
     youBotReq.write(data);
     youBotReq.end();
+    await sleep(30000);
   }
 }
 
@@ -1107,7 +1107,8 @@ const getYTAPI = async (userIndex) => {
                     console.log("Updating JSON to show most recent video.");
                     lastVideoJSON.users[j].video_id = firstVideo;
                     fs.writeFileSync("lastvideo.json", JSON.stringify(lastVideoJSON, null, 2));
-                    //videos.reverse()
+                    //Videos are logged newest-first so in order to at least TRY and have chronological order, we reverse the array so it's oldest-first.
+                    videos.reverse();
                     console.log("Video array:\n" + JSON.stringify(videos));
                     sendYoutube(videos, youtubeJSON.users[userIndex].webhook_url, youtubeJSON.users[userIndex].message);
                   }
@@ -1130,7 +1131,8 @@ const getYTAPI = async (userIndex) => {
                     title: latestVideo.items[k].snippet.title,
                     id: latestVideo.items[k].id.videoId
                   });
-                  //videos.reverse()
+                  //Videos are logged newest-first so in order to at least TRY and have chronological order, we reverse the array so it's oldest-first.
+                  videos.reverse();
                   console.log("Video array:\n" + JSON.parse(videos));
                   sendYoutube(videos, youtubeJSON.users[userIndex].webhook_url, youtubeJSON.users[userIndex].message);
 
