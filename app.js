@@ -834,7 +834,7 @@ router.get('/api/status/:userName', (req, res) => {
           tableString += "</table></div>";
           //console.log(tableString);
           displayString = "<div id=\"streamembed\" class='container' style='width: 100vw; height: 56.25vw; max-height: 50vh; max-width: 88.89vh; margin-left: -8px; margin-top: -8px; position: relative; top:0; left:0;'><iframe style='position:absolute; top:0; left:0' src='https://player.twitch.tv/?channel=" +
-            usersJSON.users[i].user_name + "&muted=true' height=100% width=100%" +
+            usersJSON.users[i].user_name + "&parent=www.tene.dev&muted=true' height=100% width=100%" +
             " frameborder='0' scrolling='no' allowfullscreen='true'></iframe></div>" + currentStatus;
           res.status(200).send("<html><head>" + htmlMeta + "<link href=\"/css/status.css\" rel=\"stylesheet\"><title>" +
             lastStreamJSON.users[j].user_name + " status</title></head><body>" +
