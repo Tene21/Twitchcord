@@ -1043,7 +1043,7 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
 const sendYoutube = async (videoArray, webhookUrl, message) => {
   for(i = 0; i < videoArray.length; i++){
     data = JSON.stringify({
-      content: message + "**[" + videoArray[i].title + "](https://youtu.be/" + videoArray[i].id + ")**"
+      content: message + "**[" + he.decode(videoArray[i].title) + "](https://youtu.be/" + videoArray[i].id + ")**"
     });
     console.log(data);
     youBotOptions = {
