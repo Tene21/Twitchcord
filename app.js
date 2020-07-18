@@ -982,7 +982,7 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
       }
       //console.log(data);
       botOptions = {
-        hostname: 'discordapp.com',
+        hostname: 'discord.com',
         path: usersJSON.users[i].webhook_url, //webhook url associated with user
         method: 'POST',
         headers: {
@@ -1047,7 +1047,7 @@ const sendYoutube = async (videoArray, webhookUrl, message) => {
     });
     console.log(data);
     youBotOptions = {
-      hostname: 'discordapp.com',
+      hostname: 'discord.com',
       path: webhookUrl,
       method: 'POST',
       headers: {
