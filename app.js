@@ -903,7 +903,7 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
           momentChange = moment();
           momentChangeFormatted = momentChange.tz(usersJSON.users[i].timezone).format("MMMM D, YYYY") + " at " + momentChange.tz(usersJSON.users[i].timezone).format("hh:mmA");
           changeLong = momentChangeFormatted;
-          console.log(userName + " has changed games " + gameChangedCount + " times this stream.\nNow playing " + gameName + "\nLast game change was at " + changeLong + momentChange.tz(usersJSON.users[i].timezone).format("z"));
+          console.log(userName + " has changed games " + gameChangedCount + " time(s) this stream.\nNow playing " + gameName + "\nLast game change was on " + changeLong + " " + momentChange.tz(usersJSON.users[i].timezone).format("z"));
           if (usersJSON.users[i].game_message.includes("<game>")) {
             if(gameName == null){
               message = usersJSON.users[i].game_message.replace("<game>", "Unlisted");
