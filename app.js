@@ -1133,7 +1133,7 @@ const getYTAPI = async (userIndex) => {
                   });
                   //Videos are logged newest-first so in order to at least TRY and have chronological order, we reverse the array so it's oldest-first.
                   videos.reverse();
-                  console.log("Video array:\n" + JSON.parse(videos));
+                  console.log("Video array:\n" + JSON.stringify(videos));
                   sendYoutube(videos, youtubeJSON.users[userIndex].webhook_url, youtubeJSON.users[userIndex].message);
 
                   break;
