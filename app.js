@@ -844,7 +844,7 @@ router.get('/api/status/:userName', (req, res) => {
       }
       break;
     } else if (i == (usersJSON.users.length - 1)) {
-      console.log(req.params.userName + " is not in users.json");
+      console.log(req.params.userName + " is not a registered user.");
       res.status(404).send("<!DOCTYPE html><html><head><title>Unregistered user</title></head><body>" +
         req.params.userName + " is not registered with this API.<br>Please contact " +
         "<a href=\"mailto:contact@tene.dev\">admin@tene.dev</a> or fill out <a href=\"/contact\">this form</a> if you would like to fix that.</body></html>");
