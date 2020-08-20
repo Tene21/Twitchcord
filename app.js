@@ -1112,7 +1112,7 @@ const sendYoutube = async (videoArray, webhookUrl, message) => {
 }
 
 const getYTAPI = async (userIndex) => {
-  await sleep(30000);
+  await sleep(60000);
   console.log("Async succeeded at: " + Date(Date.now()).toString());
   console.log("Reloading lastvideo.json...");
   lastVideoJSON = JSON.parse(fs.readFileSync("lastvideo.json", "utf8"));
