@@ -729,6 +729,48 @@ router.get('/api/status', (req, res) => {
     "Twitch Index</title></head><body>" + tableString + kofiHTML + "</body></html>");
 })
 
+//get youtube status
+router.get('/api/yt/status', (req, res) => {
+  if (fs.existsSync("lastvideo.json")) {
+    lastVideoJSON = JSON.parse(fs.readFileSync("lastvideo.json", "utf8"));
+  } else {
+    console.log("lastvideo.json does not exist.");
+  }
+  tableString = "<div id=\"indextable\" class=\"table\"><table><tr><th>User</th><th>Video</th></tr>";
+  for(var l = 0; l < lastVideoJSON.users.length; l++) {
+    tableString += "<tr><td><a href=\"/api/yt/status/" + lastVideoJSON.users[l].user +
+      "\">" + lastVideoJSON.users[l].user + "</a></td><td>" +
+      "<a href = \"http://youtu.be/" + lastVideoJSON.users[l].video_id + "\">" + lastVideoJSON.users[l].title + "</a></td></tr>";
+  }
+  tableString += "</table></div>";
+  res.status(200).send("<html><head>" + htmlMeta + "<link href=\"/css/status.css\" rel=\"stylesheet\"><title>" +
+    "YouTube Index</title></head></body>" + tableString + kofiHTML + "</body></html>");
+})
+
+//get youtube user status
+router.get('/api/yt/status/:userName', (req, res) => {
+  if (fs.existsSync("lastvideo.json")) {
+    lastVideoJSON = JSON.parse(fs.readFileSync("lastvideo.json", "utf8"));
+  } else {
+    console.log("lastvideo.json does not exist.");
+  }
+  tableString = "<div id=\"indextable\" class=\"table\"><table><tr><th>User</th><th>Video</th></tr>";
+  for(var l = 0; l < lastVideoJSON.users.length; l++) {
+    tableString += "<tr><td><a href=\"/api/yt/status/" + lastVideoJSON.users[l].user +
+      "\">" + lastVideoJSON.users[l].user + "</a></td><td>" +
+      "<a href = \"http://youtu.be/" + lastVideoJSON.users[l].video_id + "\">" + lastVideoJSON.users[l].title + "</a></td></tr>";
+    if(lastVideoJSON.users[l].user == req.params.userName){
+      embedString = "<div id=\"ytembed\" class=\"video\"><iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/" +
+        lastVideoJSON.users[l].video_id + "\" frameborder=\"0\" allow=\"accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture\" allowfullscreen></iframe>" +
+        "</div>";
+    }
+  }
+  tableString += "</table></div>";
+
+  res.status(200).send("<html><head>" + htmlMeta + "<link href=\"/css/status.css\" rel=\"stylesheet\"><title>" +
+    "YouTube Index</title></head></body>" + embedString + tableString + kofiHTML + "</body></html>");
+})
+
 //letsencrypt challenge
 router.get('/.well-known/acme-challenge/:fileName', (req, res) => {
   if(fs.existsSync(__dirname + '/.well-known/acme-challenge/' + req.params.fileName)){
