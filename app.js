@@ -1106,6 +1106,7 @@ const getYTAPI = async (userIndex) => {
                   if (firstVideo != "") {
                     console.log("Updating JSON to show most recent video.");
                     lastVideoJSON.users[j].video_id = firstVideo;
+                    lastVideoJSON.users[j].title = firstVideoTitle;
                     fs.writeFileSync("lastvideo.json", JSON.stringify(lastVideoJSON, null, 2));
                     //Videos are logged newest-first so in order to at least TRY and have chronological order, we reverse the array so it's oldest-first.
                     videos.reverse();
@@ -1121,11 +1122,13 @@ const getYTAPI = async (userIndex) => {
                       id: latestVideo.items[k].id.videoId
                     });
                   firstVideo = latestVideo.items[k].id.videoId;
+                  firstVideoTitle = latestVideo.items[k].snippet.title;
                   continue;
                 } else if ((k + 1) == latestVideo.items.length) {
                   console.log("Logging the last video in the list.\nTitle: " + latestVideo.items[k].snippet.title +
                     "\nURL: " + latestVideo.items[k].id.videoId + "\nUpdating JSON to show most recent video.");
                   lastVideoJSON.users[j].video_id = firstVideo;
+                  lastVideoJSON.users[j].title = firstVideoTitle;
                   fs.writeFileSync("lastvideo.json", JSON.stringify(lastVideoJSON, null, 2));
                   videos.push({
                     title: latestVideo.items[k].snippet.title,

@@ -67,7 +67,8 @@ Can now provide Discord alerts for YouTube uploads. Relies on JSON similar to th
     {
       "user": "ExampleUser",
       "id": "The channel ID of the user",
-      "video_id": "The ID of the user's latest upload"
+      "video_id": "The ID of the user's latest upload",
+			"title": "The title of the user's latest upload"
     }]
 }
 ```
