@@ -749,6 +749,7 @@ router.get('/api/yt/status', (req, res) => {
 
 //get youtube user status
 router.get('/api/yt/status/:userName', (req, res) => {
+  let embedString = "";
   if (fs.existsSync("lastvideo.json")) {
     lastVideoJSON = JSON.parse(fs.readFileSync("lastvideo.json", "utf8"));
   } else {
@@ -756,19 +757,26 @@ router.get('/api/yt/status/:userName', (req, res) => {
   }
   tableString = "<div id=\"indextable\" class=\"table\"><table><tr><th>User</th><th>Video</th></tr>";
   for(var l = 0; l < lastVideoJSON.users.length; l++) {
-    tableString += "<tr><td><a href=\"/api/yt/status/" + lastVideoJSON.users[l].user +
+    tableString += "<tr><td><a href=\"/api/yt/status/" + lastVideoJSON.users[l].user.toLowerCase() +
       "\">" + lastVideoJSON.users[l].user + "</a></td><td>" +
       "<a href = \"http://youtu.be/" + lastVideoJSON.users[l].video_id + "\">" + lastVideoJSON.users[l].title + "</a></td></tr>";
-    if(lastVideoJSON.users[l].user == req.params.userName){
+    if(lastVideoJSON.users[l].user.toLowerCase() == req.params.userName.toLowerCase()){
       embedString = "<div id=\"ytembed\" class=\"video\"><iframe width=\"560\" height=\"315\" src=\"https://www.youtube.com/embed/" +
         lastVideoJSON.users[l].video_id + "\" frameborder=\"0\" allow=\"accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture\" allowfullscreen></iframe>" +
         "</div>";
-    }
+  }
   }
   tableString += "</table></div>";
+  if(embedString == ""){
+    console.log(req.params.userName + " is not a registered user.");
+    res.status(404).send("<!DOCTYPE html><html><head><title>Unregistered user</title></head><body>" +
+      req.params.userName + " is not registered with this API.<br>Please contact " +
+      "<a href=\"mailto:contact@tene.dev\">admin@tene.dev</a> or fill out <a href=\"/contact\">this form</a> if you would like to fix that.</body></html>");
+  } else {
+    res.status(200).send("<html><head>" + htmlMeta + "<link href=\"/css/status.css\" rel=\"stylesheet\"><title>" +
+      "YouTube Index</title></head></body>" + embedString + tableString + kofiHTML + "</body></html>");
+  }
 
-  res.status(200).send("<html><head>" + htmlMeta + "<link href=\"/css/status.css\" rel=\"stylesheet\"><title>" +
-    "YouTube Index</title></head></body>" + embedString + tableString + kofiHTML + "</body></html>");
 })
 
 //letsencrypt challenge
