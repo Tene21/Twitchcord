@@ -710,7 +710,7 @@ router.get('/api/status', (req, res) => {
   }
   tableString = "<div id=\"indextable\" class=\"table\"><table><tr><th>User</th><th>Status</th><th>Game</th></tr>";
   for (var k = 0; k < lastStreamJSON.users.length; k++) {
-    tableString += "<tr><td><a href=\"/api/status/" + lastStreamJSON.users[k].user_name +
+    tableString += "<tr><td><a href=\"/api/status/" + lastStreamJSON.users[k].user_name.toLowerCase() +
       "\">" + lastStreamJSON.users[k].user_name + "</a></td><td>" +
       lastStreamJSON.users[k].status.charAt(0).toUpperCase() +
       lastStreamJSON.users[k].status.slice(1) + "</td><td>";
@@ -738,7 +738,7 @@ router.get('/api/yt/status', (req, res) => {
   }
   tableString = "<div id=\"indextable\" class=\"table\"><table><tr><th>User</th><th>Video</th></tr>";
   for(var l = 0; l < lastVideoJSON.users.length; l++) {
-    tableString += "<tr><td><a href=\"/api/yt/status/" + lastVideoJSON.users[l].user +
+    tableString += "<tr><td><a href=\"/api/yt/status/" + lastVideoJSON.users[l].user.toLowerCase() +
       "\">" + lastVideoJSON.users[l].user + "</a></td><td>" +
       "<a href = \"http://youtu.be/" + lastVideoJSON.users[l].video_id + "\">" + lastVideoJSON.users[l].title + "</a></td></tr>";
   }
@@ -867,7 +867,7 @@ router.get('/api/status/:userName', (req, res) => {
           currentStatus = "<div id=\"currentstatus\">" + outputString + "</div>"
           tableString = "<div id=\"indextable\" class=\"table\"><table><tr><th>User</th><th>Status</th><th>Game</th></tr>";
           for (var k = 0; k < lastStreamJSON.users.length; k++) {
-            tableString += "<tr><td><a href=\"/api/status/" + lastStreamJSON.users[k].user_name +
+            tableString += "<tr><td><a href=\"/api/status/" + lastStreamJSON.users[k].user_name.toLowerCase() +
               "\">" + lastStreamJSON.users[k].user_name + "</a></td><td>" +
               lastStreamJSON.users[k].status.charAt(0).toUpperCase() +
               lastStreamJSON.users[k].status.slice(1) + "</td><td>";
