@@ -344,6 +344,7 @@ router.post('/api', (req, res) => {
         var user_name = json.data[0].user_name;
         var title = json.data[0].title;
         var start_time = new Date(json.data[0].started_at /*+ " +0100"*/ );
+        var isoDate = json.data[0].started_at;
         var startTime = json.data[0].started_at;
         //console.log(start_time);
         //console.log(startTime);
@@ -430,13 +431,13 @@ router.post('/api', (req, res) => {
             console.log("New stream");
             sendToBot(user_name, gameName, title, longDate, "new stream", date, start_time.toLocaleString('default', {
               hour: '2-digit'
-            }), lastStream, currentIndex, startTime, isNewUser, momentTest);
+            }), lastStream, currentIndex, startTime, isNewUser, momentTest, isoDate);
             res.status(200).send();
           } else if (lastGame != gameName) {
             console.log("New game");
             sendToBot(user_name, gameName, title, longDate, "new game", date, start_time.toLocaleString('default', {
               hour: '2-digit'
-            }), lastStream, currentIndex, startTime, isNewUser, momentTest);
+            }), lastStream, currentIndex, startTime, isNewUser, momentTest, isoDate);
             res.status(200).send();
           } else {
             if (!isOffline) {
@@ -468,7 +469,7 @@ router.post('/api', (req, res) => {
               console.log("Game has changed, sending new alert.");
               sendToBot(user_name, gameName, title, longDate, "new game", date, start_time.toLocaleString('default', {
                 hour: '2-digit'
-              }), lastStream, currentIndex, startTime, isNewUser, momentTest);
+              }), lastStream, currentIndex, startTime, isNewUser, momentTest, isoDate);
             } else {
               console.log(user_name + " is already live.\nIgnoring alert.");
             }
@@ -503,6 +504,7 @@ router.post('/api', (req, res) => {
             var user_name = json.data[0].user_name;
             var title = json.data[0].title;
             var start_time = new Date(json.data[0].started_at /*+ " +0100"*/ );
+            var isoDate = json.data[0].started_at;
             var startTime = json.data[0].started_at;
             //console.log(start_time);
             //console.log(startTime);
@@ -589,13 +591,13 @@ router.post('/api', (req, res) => {
                 console.log("New stream");
                 sendToBot(user_name, gameName, title, longDate, "new stream", date, start_time.toLocaleString('default', {
                   hour: '2-digit'
-                }), lastStream, currentIndex, startTime, isNewUser, momentTest);
+                }), lastStream, currentIndex, startTime, isNewUser, momentTest, isoDate);
                 res.status(200).send();
               } else if (lastGame != gameName) {
                 console.log("New game");
                 sendToBot(user_name, gameName, title, longDate, "new game", date, start_time.toLocaleString('default', {
                   hour: '2-digit'
-                }), lastStream, currentIndex, startTime, isNewUser, momentTest);
+                }), lastStream, currentIndex, startTime, isNewUser, momentTest, isoDate);
                 res.status(200).send();
               } else {
                 if (!isOffline) {
@@ -623,7 +625,7 @@ router.post('/api', (req, res) => {
                 console.log("Game has changed, sending new alert.");
                 sendToBot(user_name, gameName, title, longDate, "new game", date, start_time.toLocaleString('default', {
                   hour: '2-digit'
-                }), lastStream, currentIndex, startTime, isNewUser, momentTest);
+                }), lastStream, currentIndex, startTime, isNewUser, momentTest, isoDate);
               } else {
                 console.log(user_name + " is already live.\nIgnoring alert.");
               }
@@ -903,7 +905,7 @@ router.get('/api/status/:userName', (req, res) => {
 });
 
 //SEND POST REQUEST TO DISCORD WEBHOOK URL
-function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate, hour, lastStream, jsonIndex, fullTimeStamp, isNewUser, momentTest) {
+function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate, hour, lastStream, jsonIndex, fullTimeStamp, isNewUser, momentTest, isoDate) {
   var message;
   var imgurURL = "";
   //console.log("Full timestamp: "+ fullTimeStamp );
@@ -953,6 +955,10 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
           momentChange = moment();
           momentChangeFormatted = momentChange.tz(usersJSON.users[i].timezone).format("MMMM D, YYYY") + " at " + momentChange.tz(usersJSON.users[i].timezone).format("hh:mmA");
           changeLong = momentChangeFormatted;
+          changeISO = new Date(Date.now());
+          changeISO = changeISO.toISOString();
+          isoDate = changeISO;
+          console.log("ISO8601 timestamp: " + changeISO);
           console.log(userName + " has changed games " + gameChangedCount + " time(s) this stream.\nNow playing " + gameName + "\nLast game change was on " + changeLong + " " + momentChange.tz(usersJSON.users[i].timezone).format("z"));
           if (usersJSON.users[i].game_message.includes("<game>")) {
             if(gameName == null){
@@ -996,9 +1002,7 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
             image: {
               url: thumbnailURL
             },
-            footer: {
-              text: changeLong
-            }
+            timestamp: isoDate
           }]
         });
       } else {
@@ -1023,9 +1027,7 @@ function sendToBot(userName, gameName, streamTitle, startTime, reason, shortDate
             image: {
               url: thumbnailURL
             },
-            footer: {
-              text: changeLong
-            }
+            timestamp: isoDate
           }]
         });
 
